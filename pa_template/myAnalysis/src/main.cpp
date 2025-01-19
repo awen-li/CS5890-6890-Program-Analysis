@@ -1,33 +1,48 @@
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IRReader/IRReader.h"
-#include "llvm/Support/SourceMgr.h"
-#include "llvm/Support/raw_ostream.h"
-
+#include "cmd_parser.h"
 #include "analysis.h"
 
-int main(int argc, char** argv) {
-    if (argc != 2) {
-        llvm::errs() << "Usage: " << argv[0] << " <IR file>\n";
-        return 1;
-    }
+static inline void addCmdOptions (CommandLineParser& cmdParser)
+{
+    // Add your new option here
+    cmdParser.addOption('b', "", "Specify the path of LLVM bitcode file for analysis");
+}
 
+static inline void analyzeModule(const string& bcPath)
+{
     // Initialize LLVM context
     llvm::LLVMContext context;
 
     // Read IR file
     llvm::SMDiagnostic error;
-    std::unique_ptr<llvm::Module> module = llvm::parseIRFile(argv[1], error, context);
-    if (!module) {
-        error.print(argv[0], llvm::errs());
-        return 1;
+    std::unique_ptr<llvm::Module> module = llvm::parseIRFile(bcPath, error, context);
+    if (!module) 
+    {
+        error.print(bcPath.c_str(), llvm::errs());
+        return;
     }
 
     llvm::outs() << "Loaded module:\n";
     module->print(llvm::outs(), nullptr);
 
-    // Perform analysis
     analyzeModule(*module);
+    return;
+}   
+
+int main(int argc, char** argv) 
+{
+    CommandLineParser cmdParser(argc, argv);
+    addCmdOptions (cmdParser);
+    cmdParser.parse ();
+    
+    if (cmdParser.hasOption("h")) 
+    {
+        cmdParser.help ();
+    }
+
+    if (cmdParser.hasOption("b"))
+    {
+        analyzeModule (cmdParser.getOption ("b"));
+    }
 
     return 0;
 }
