@@ -2,6 +2,7 @@
 #ifndef _GRAPH_VISUAL_H_
 #define _GRAPH_VISUAL_H_
 #include <fstream>
+#include <cassert>
 
 using namespace std;
 
@@ -23,16 +24,16 @@ protected:
     string m_GraphLabel;
 
 protected:
-    inline void WriteHeader (string GraphName) 
+    inline void writeHeader (string graphName) 
     {
-        fprintf(m_File, "digraph \"%s\"{\n", GraphName.c_str());
-        fprintf(m_File, "\tlabel=\"%s\";\n", GetGraphLabel().c_str()); 
+        fprintf(m_File, "digraph \"%s\"{\n", graphName.c_str());
+        fprintf(m_File, "\tlabel=\"%s\";\n", getGraphLabel().c_str()); 
         fprintf(m_File, "\n\n");
 
         return;
     }
 
-    inline string GetGraphLabel() 
+    inline string getGraphLabel() 
     {
         if (m_GraphLabel != "")
         {
@@ -42,143 +43,138 @@ protected:
         return m_GraphName;
     }
 
-    virtual inline string GetNodeLabel(NodeTy *Node) 
+    virtual inline string getNodeLabel(NodeTy *node) 
     {
         string str = "";
-        str = "N-" + to_string (Node->GetId ());
+        str = "N-" + to_string (node->getId ());
         return str;
     }
 
-    virtual inline string GetNodeName(NodeTy *Node) 
+    virtual inline string getNodeName(NodeTy *node) 
     {
         string str = "";
-        str = "N" + to_string (Node->GetId ());
+        str = "N" + to_string (node->getId ());
         return str;
     }
     
-    virtual inline string GetNodeAttributes(NodeTy *Node) 
+    virtual inline string getNodeAttributes(NodeTy *node) 
     {
         string str = "color=black";   
         return str;
     }
 
-    virtual inline string GetEdgeLabel(EdgeTy *Edge) 
+    virtual inline string getEdgeLabel(EdgeTy *edge) 
     {
         return "";
     }
 
-    virtual inline string GetEdgeAttributes(EdgeTy *Edge) 
+    virtual inline string getEdgeAttributes(EdgeTy *edge) 
     {
         string str = "color=black";
         return str;
     }
  
-    inline void WriteNodes(NodeTy *Node) 
+    inline void writeNodes(NodeTy *Node) 
     {
         /* NodeID [color=grey,label="{NodeID: 0}"]; */
         string str;
-        str = GetNodeName (Node) + " [" + GetNodeAttributes (Node) + 
-              ",label=\"" + GetNodeLabel (Node) + "\"];";
+        str = getNodeName (Node) + " [" + getNodeAttributes (Node) + 
+              ",label=\"" + getNodeLabel (Node) + "\"];";
 
         fprintf(m_File, "\t%s\n", str.c_str());
         return;        
     }
  
 
-    inline void WriteEdge(EdgeTy *Edge) 
+    inline void writeEdge(EdgeTy *edge) 
     {
         /* NodeId -> NodeId[style=solid,color=black, ,label="..."]; */
         string str;
 
-        str = "\t" + GetNodeName (Edge->GetSrcNode()) + " -> " + GetNodeName (Edge->GetDstNode()) +
-              "[" + GetEdgeAttributes (Edge) + ",label=\"\"];";
+        str = "\t" + getNodeName (edge->getSrcNode()) + " -> " + getNodeName (edge->getDstNode()) +
+              "[" + getEdgeAttributes (edge) + ",label=\"\"];";
                
         fprintf(m_File, "%s\n", str.c_str());
         return; 
      
     }
 
-    virtual inline bool IsEdgeType (EdgeTy *Edge)
+    virtual inline bool IsEdgeType (EdgeTy *edge)
     {
         return true;
     }
 
-    virtual inline bool IsVizNode (NodeTy *Node)
+    virtual inline bool IsVizNode (NodeTy *node)
     {
         return true;
     }
 
-    virtual inline bool IsVizEdge (EdgeTy *Edge)
+    virtual inline bool IsVizEdge (EdgeTy *edge)
     {
         return true;
     }
 
 public:
-    GraphVis(string GraphName, GraphType* Graph) 
+    GraphVis(string graphName, GraphType* graph) 
     {
-        m_GraphName  = GraphName;
+        m_GraphName  = graphName;
         m_GraphLabel = "";
         
-        string DotFile = GraphName + ".dot";
-        m_File    = fopen (DotFile.c_str(), "w");
+        string dotFile = graphName + ".dot";
+        m_File    = fopen (dotFile.c_str(), "w");
         assert (m_File != NULL);
 
-        m_Graph = Graph;
+        m_Graph = graph;
     }
 
-    ~GraphVis()
+    virtual ~GraphVis()
     {
         fclose (m_File);
     }
 
-    virtual inline void SetNodeLabel(string GLabel) 
+    virtual inline void setNodeLabel(string GLabel) 
     {
         m_GraphLabel = GLabel;
         return;
     }
 
-    void WiteGraph () 
+    void witeGraph () 
     {
-        WriteHeader(m_GraphName);
+        writeHeader(m_GraphName);
 
         // write nodes
         fprintf(m_File, "\t// Define the nodes\n");
-        for (auto It = m_Graph->begin (), End = m_Graph->end (); It != End; It++)
+        for (auto it = m_Graph->begin (), end = m_Graph->end (); it != end; it++)
         {
-            NodeTy *Node = It->second;
-            if (!IsVizNode (Node))
+            NodeTy *node = it->second;
+            if (!IsVizNode (node))
             {
                 continue;
             }
-            WriteNodes (Node);
+            writeNodes (node);
         }
 
         fprintf(m_File, "\n\n");
 
         // write edges
         fprintf(m_File, "\t// Define the edges\n");
-        for (auto It = m_Graph->begin (), End = m_Graph->end (); It != End; It++)
+        for (auto it = m_Graph->begin (), end = m_Graph->end (); it != end; it++)
         {
-            NodeTy *Node = It->second;
-            if (!IsVizNode (Node))
+            NodeTy *node = it->second;
+            if (!IsVizNode (node))
             {
                 continue;
             }
 
-            for (auto ItEdge = Node->OutEdgeBegin (), ItEnd = Node->OutEdgeEnd (); ItEdge != ItEnd; ItEdge++)
+            for (auto itEdge = node->outEdgeBegin (), itEnd = node->outEdgeEnd (); itEdge != itEnd; itEdge++)
             {
-                EdgeTy *Edge = *ItEdge;
-                if (!IsVizNode (Edge->GetDstNode()))
-                {
-                    continue;
-                }
-
-                if (!IsEdgeType(Edge))
+                EdgeTy *edge = *itEdge;
+                if (!IsVizNode (edge->getDstNode()))
                 {
                     continue;
                 }
                 
-                WriteEdge (Edge);
+                writeEdge (edge);
             }
         }
 

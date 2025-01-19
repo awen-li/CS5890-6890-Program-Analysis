@@ -17,7 +17,7 @@ include_directories(include)
 add_definitions(${LLVM_DEFINITIONS})
 
 # Add source files
-add_executable(myAnalysis src/main.cpp src/analysis.cpp)
+add_executable(myAnalysis src/main.cpp src/test.cpp src/analysis.cpp)
 
 # Link with LLVM libraries
 llvm_map_components_to_libnames(LLVM_LIBS core irreader support)

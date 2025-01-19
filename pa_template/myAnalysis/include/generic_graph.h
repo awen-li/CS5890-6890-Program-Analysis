@@ -1,7 +1,9 @@
 #ifndef _GENERIC_GRAPH_H_
 #define _GENERIC_GRAPH_H_
+#include <set>
+#include <map>
 
-
+using namespace std;
 
 template<class NodeTy> class GenericEdge 
 {    
@@ -20,24 +22,42 @@ public:
     {
     }
 
+    inline unsigned getSrcID() const 
+    {
+        return m_SrcNode->getId();
+    }
+    
+    inline unsigned getDstID() const 
+    {
+        return m_DstNode->getId();
+    }
+    NodeTy* getSrcNode() const 
+    {
+        return m_SrcNode;
+    }
+    
+    NodeTy* getDstNode() const 
+    {
+        return m_DstNode;
+    }
+
     inline bool operator== (const GenericEdge<NodeTy>* rhs) const 
     {
-        return (rhs->GetAttr () == this->GetAttr () &&
-                rhs->GetSrcID() == this->GetSrcID() &&
-                rhs->GetDstID() == this->GetDstID());
+        return (rhs->getSrcID() == this->getSrcID() &&
+                rhs->getDstID() == this->getDstID());
     }
 
     typedef struct 
     {
         bool operator()(const GenericEdge<NodeTy>* lhs, const GenericEdge<NodeTy>* rhs) const 
         {
-            if (lhs->GetSrcID() != rhs->GetSrcID())
+            if (lhs->getSrcID() != rhs->getSrcID())
             {
-                return lhs->GetSrcID() < rhs->GetSrcID();
+                return lhs->getSrcID() < rhs->getSrcID();
             }
             else
             {
-                return lhs->GetDstID() < rhs->GetDstID();
+                return lhs->getDstID() < rhs->getDstID();
             }
         }
     } EqualGEdge;
@@ -58,81 +78,82 @@ private:
     T_GEdgeSet m_OutEdgeSet;  
 
 public:
-    GenericNode(unsigned Id): m_Id(Id) 
+    GenericNode(unsigned id): m_Id(id) 
     {
     }
 
     virtual ~GenericNode() 
     {        
-        Release();
+        release();
     }
 
-    inline void Release()
+    inline void release()
     {
-        for (auto In = InEdgeBegin (), End = InEdgeEnd (); In != End; In++)
+        for (auto in = inEdgeBegin (), end = inEdgeEnd (); in != end; in++)
         {
-            RmIncomingEdge(*In);      
+            EdgeTy *edge = *in;
+            delete edge;      
         }
-        m_InEdgeSet.clear();      
-        
-        for (auto In = OutEdgeBegin (), End = OutEdgeEnd (); In != End; In++)
-        {
-            RmOutgoingEdge(*In);      
-        }
+        m_InEdgeSet.clear();
         m_OutEdgeSet.clear();
     }
 
-    inline iterator OutEdgeBegin()
+    inline unsigned getId() const
+    {
+        return m_Id;
+    }
+
+    inline iterator outEdgeBegin()
     {
         return m_OutEdgeSet.begin();
     }
     
-    inline iterator OutEdgeEnd() 
+    inline iterator outEdgeEnd() 
     {
         return m_OutEdgeSet.end();
     }
     
-    inline iterator InEdgeBegin() 
+    inline iterator inEdgeBegin() 
     {
         return m_InEdgeSet.begin();
     }
     
-    inline iterator InEdgeEnd() 
+    inline iterator inEdgeEnd() 
     {
         return m_InEdgeSet.end();
     }
 
-    inline bool AddIncomingEdge(EdgeTy* InEdge)
+    inline bool addIncomingEdge(EdgeTy* inEdge)
     {
-        return m_InEdgeSet.insert(InEdge).second;
+        return m_InEdgeSet.insert(inEdge).second;
     }
     
-    inline bool AddOutgoingEdge(EdgeTy* OutEdge) 
+    inline bool addOutgoingEdge(EdgeTy* outEdge) 
     {
-        return m_OutEdgeSet.insert(OutEdge).second;
+        return m_OutEdgeSet.insert(outEdge).second;
     }
 
-    inline void RmIncomingEdge(EdgeTy* InEdge) 
+    inline void rmIncomingEdge(EdgeTy* inEdge) 
     {
-        iterator it = m_InEdgeSet.find(InEdge);
+        iterator it = m_InEdgeSet.find(inEdge);
         if(it == m_InEdgeSet.end())
         {
             return;
         }
 
-        m_InEdgeSet.erase(InEdge);
+        m_InEdgeSet.erase(inEdge);
         return;
     }
     
-    inline void RmOutgoingEdge(EdgeTy* OutEdge) 
+    inline void rmOutgoingEdge(EdgeTy* outEdge) 
     {
-        iterator it = m_OutEdgeSet.find(OutEdge);
+        iterator it = m_OutEdgeSet.find(outEdge);
         if(it == m_OutEdgeSet.end())
         {
             return;
         }
 
-        m_OutEdgeSet.erase(OutEdge);
+        m_OutEdgeSet.erase(outEdge);
         return;
     }
 };
@@ -141,7 +162,7 @@ template<class NodeTy,class EdgeTy> class GenericGraph
 {
 
 public:
-    typedef llvm::DenseMap<unsigned, NodeTy*> T_IDToNodeMap;   
+    typedef map <unsigned, NodeTy*> T_IDToNodeMap;   
     typedef typename T_IDToNodeMap::iterator node_iterator;
 
 protected:
@@ -175,22 +196,27 @@ public:
         return m_IDToNodeMap.end();
     }
 
-    inline void AddNode(unsigned id, NodeTy* node) 
+    inline void addNode(unsigned id, NodeTy* node) 
     {
         m_IDToNodeMap[id] = node;
         m_NodeNum++;
     }
 
-    inline void RmNode(NodeTy* Node) 
+    inline unsigned getNodeNum() 
     {
-        
+        return m_NodeNum;
     }
 
-    inline bool AddEdge(EdgeTy* Edge)
+    inline unsigned getEdgeNum() 
     {
-        if (Edge->GetDstNode()->AddIncomingEdge(Edge))
+        return m_EdgeNum;
+    }
+
+    inline bool addEdge(EdgeTy* edge)
+    {
+        if (edge->getDstNode()->addIncomingEdge(edge))
         {
-            Edge->GetSrcNode()->AddOutgoingEdge(Edge);
+            edge->getSrcNode()->addOutgoingEdge(edge);
             m_EdgeNum++;
 
             return true;
@@ -199,13 +225,13 @@ public:
         return false;
     }
 
-    inline void RmEdge(EdgeTy* Edge)
+    inline void rmEdge(EdgeTy* edge)
     {
-        Edge->GetDstNode()->RmIncomingEdge(Edge);
-        Edge->GetSrcNode()->RmOutgoingEdge(Edge);
+        edge->getDstNode()->rmIncomingEdge(edge);
+        edge->getSrcNode()->rmOutgoingEdge(edge);
             
         m_EdgeNum--;
-        delete Edge;
+        delete edge;
         return;
     }
 };

@@ -64,7 +64,7 @@ public:
             } 
             else 
             {
-                cout << "@@CommandLineParser: parse option failed --> "<<opt<<"\r\n";
+                printf ("@@CommandLineParser: parse option [-%c] failed \n", opt);
                 help();
                 exit(0);
             }
