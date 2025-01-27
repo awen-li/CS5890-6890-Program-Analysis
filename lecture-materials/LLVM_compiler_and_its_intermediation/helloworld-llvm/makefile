@@ -34,13 +34,13 @@ $(OBJ_PATH)/%.bc: $(SOURCE_PATH)/%.c
 #######################################
 # 2. Link all .bc files into merged.bc
 #######################################
-$(OBJ_PATH)/merged.bc: $(BC_FILES)
+$(TARGET).bc: $(BC_FILES)
 	llvm-link -o $@ $^
 
 #######################################
 # 3. Compile merged.bc to native .o
 #######################################
-$(OBJ_PATH)/merged.o: $(OBJ_PATH)/merged.bc
+$(OBJ_PATH)/merged.o: $(TARGET).bc
 	llc -filetype=obj -o $@ $<
 
 #######################################
