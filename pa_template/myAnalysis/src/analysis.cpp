@@ -1,5 +1,7 @@
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/Analysis/CallGraph.h"
 #include "llvm/Support/raw_ostream.h"
 #include "analysis.h"
 
@@ -70,6 +72,58 @@ static inline void printInstructions (const Module& module)
     }
 }
 
+static inline void printCG (std::map<std::string, std::set<std::string>>& callGraph)
+{
+    for (const auto &caller : callGraph) 
+    {
+        outs() << "Function: " << caller.first << "\n";
+        if (!caller.second.empty())
+        {
+            outs() << "  Calls:\n";
+            for (const auto &callee : caller.second) 
+            {
+                outs() << "    - " << callee << "\n";
+            }
+        }
+        else
+        {
+            outs() << "  Calls: None\n";
+        }
+
+        outs() << "\n";
+    }
+}
+
+static inline void printCallGraph(const Module& module) 
+{
+    errs() << "@@printCallGraph\n";
+
+    std::map<std::string, std::set<std::string>> callGraph;
+    for (const auto &function : module) 
+    {
+        std::string callerName = function.getName().str();
+        callGraph[callerName] = std::set<std::string>();
+
+        for (const auto &bb : function) 
+        {
+            for (const auto &instr : bb) 
+            {
+                if (const CallBase *call = dyn_cast<CallBase>(&instr)) 
+                {
+                    if (Function *calledFunc = call->getCalledFunction()) 
+                    {
+                        std::string calleeName = calledFunc->getName().str();
+                        callGraph[callerName].insert(calleeName);
+                    }
+                }
+            }
+        }
+    }
+
+    printCG (callGraph);    
+}
+
+
 void analyzeModule(llvm::Module& module, string type) 
 {
     if (type == "function")
@@ -80,4 +134,7 @@ void analyzeModule(llvm::Module& module, string type)
 
     if (type == "inst")
         printInstructions (module);
+
+    if (type == "cg")
+        printCallGraph (module);
 }
