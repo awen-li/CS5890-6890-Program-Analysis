@@ -29,7 +29,55 @@ static inline void printFunctions (llvm::Module& module)
     }
 }
 
-void analyzeModule(llvm::Module& module) 
+static inline void printBasicBlockStats(const Module& module) 
 {
-    printFunctions (module);
+    outs() << "@@printBasicBlockStats\n";
+
+    for (const auto &function : module) 
+    {
+        unsigned int basicBlockCount = 0;
+        for (const auto &bb : function) 
+        {
+            basicBlockCount++;
+        }
+
+        outs() << "Function: " << function.getName() << "\n";
+        outs() << "\tNumber of Basic Blocks: " << basicBlockCount << "\n";
+    }
+}
+
+
+static inline void printInstructions (const Module& module)
+{
+    errs() << "@@printInstructions\n";
+
+    for (const auto &function : module) 
+    {
+        if (function.isDeclaration())
+            continue;
+
+        outs() << "Function: " << function.getName() << "\n";
+        for (const auto &bb : function) 
+        {
+            for (const auto &instr : bb) 
+            {
+                StringRef opcodeName = instr.getOpcodeName();
+                outs() << "    [" << opcodeName << "] " << instr << "\n";
+            }
+        }
+
+        outs() << "\n";
+    }
+}
+
+void analyzeModule(llvm::Module& module, string type) 
+{
+    if (type == "function")
+        printFunctions (module);
+
+    if (type == "block")
+        printBasicBlockStats (module);
+
+    if (type == "inst")
+        printInstructions (module);
 }

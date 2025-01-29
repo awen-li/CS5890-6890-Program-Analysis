@@ -8,10 +8,11 @@ static inline void addCmdOptions (CommandLineParser& cmdParser)
 {
     // Add your new option here
     cmdParser.addOption('b', "", "Specify the path of LLVM bitcode file for analysis");
+    cmdParser.addOption('f', "", "Specify the functionality: function, block, inst");
     cmdParser.addOption('t', "bool", "Perform the test for the code");
 }
 
-static inline void analyzeModule(const string& bcPath)
+static inline void analyzeModule(const string& bcPath, const string& fType)
 {
     // Initialize LLVM context
     llvm::LLVMContext context;
@@ -25,10 +26,10 @@ static inline void analyzeModule(const string& bcPath)
         return;
     }
 
-    llvm::outs() << "Loaded module:\n";
-    module->print(llvm::outs(), nullptr);
+    //llvm::outs() << "Loaded module:\n";
+    //module->print(llvm::outs(), nullptr);
 
-    analyzeModule(*module);
+    analyzeModule(*module, fType);
     return;
 }   
 
@@ -52,7 +53,7 @@ int main(int argc, char** argv)
 
     if (cmdParser.hasOption("b"))
     {
-        analyzeModule (cmdParser.getOption ("b"));
+        analyzeModule (cmdParser.getOption ("b"), cmdParser.getOption ("f"));
     }
 
     return 0;

@@ -10,6 +10,6 @@
 #include "generic_graph.h"
 #include "graph_visual.h"
 
-void analyzeModule(llvm::Module& module);
+void analyzeModule(llvm::Module& module, string type);
 
 #endif // ANALYSIS_H
