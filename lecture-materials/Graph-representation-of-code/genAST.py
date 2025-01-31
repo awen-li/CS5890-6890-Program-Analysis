@@ -1,15 +1,22 @@
 import ast
+import astpretty
+from astmonkey import visitors, transformers
 
 source_code = """
-def greet(name):
-    if name:
-        print(f"Hello, {name}!")
-    else:
-        print("Hello, stranger!")
+def helloWorld(name):
+    print(f"Hello, {name}!")
 
-greet("cs6890")
+helloWorld("cs6890")
 """
+
+def genPDF (astTree):
+    astTree = transformers.ParentChildNodeTransformer().visit(astTree)
+    graph = visitors.GraphNodeVisitor()
+    graph.visit(astTree)
+    graph.graph.write_pdf("ast_output.pdf")
 
 if __name__ == "__main__":
     tree = ast.parse(source_code)
-    print(ast.dump(tree, indent=4))
+    astpretty.pprint(tree)
+    genPDF (tree)
+
