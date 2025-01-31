@@ -3,6 +3,8 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/GraphWriter.h"
 #include "analysis.h"
 
 using namespace llvm;
@@ -124,6 +126,58 @@ static inline void printCallGraph(const Module& module)
 }
 
 
+void DumpCallGraph(CallGraph &CG, const std::string &FileName)
+{
+    std::error_code EC;
+    raw_fd_ostream File(FileName, EC, sys::fs::OF_Text);
+
+    if (!EC) 
+    {
+        File << "digraph CallGraph {\n";
+        std::set<std::pair<std::string, std::string>> uniqueEdges;
+                
+        for (auto &node : CG) 
+        {
+            const Function *F = node.first;
+            if (!F || F->isDeclaration()) continue;
+
+            std::string FuncName = F->getName().str();
+            File << "\"" << FuncName << "\";\n";
+
+            CallGraphNode *CGN = node.second.get();
+            for (unsigned i = 0; i < CGN->size(); ++i) 
+            {
+                CallGraphNode *CalleeNode = CGN->operator[](i);
+                Function *Callee = CalleeNode->getFunction();
+                if (Callee && !Callee->isDeclaration()) 
+                {
+                    std::string CalleeName = Callee->getName().str();
+                    if (uniqueEdges.insert({FuncName, CalleeName}).second) 
+                    {
+                        File << "\"" << FuncName << "\" -> \"" << CalleeName << "\";\n";
+                    }
+                }
+            }
+        }
+
+        File << "}\n";
+        errs() << "Call graph saved to " << FileName << "\n";
+    } 
+    else 
+    {
+        errs() << "Error opening file: " << EC.message() << "\n";
+    }
+}
+
+bool genCallGraph (Module &M) 
+{
+    CallGraph CG(M);
+
+    DumpCallGraph (CG, "callgraph.dot");
+    return false;
+}
+
+
 void analyzeModule(llvm::Module& module, string type) 
 {
     if (type == "function")
@@ -136,5 +190,8 @@ void analyzeModule(llvm::Module& module, string type)
         printInstructions (module);
 
     if (type == "cg")
+    {
         printCallGraph (module);
+        genCallGraph (module);
+    }
 }
