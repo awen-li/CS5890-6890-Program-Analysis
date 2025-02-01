@@ -177,6 +177,80 @@ bool genCallGraph (Module &M)
     return false;
 }
 
+static inline string getBBName (const llvm::BasicBlock &BB)
+{
+    std::string bbName;
+    if (BB.hasName())
+    {
+        bbName = BB.getName().str();
+    }
+    else
+    {
+        bbName = "BB_" + std::to_string(reinterpret_cast<uintptr_t>(&BB));
+    }
+
+    return bbName;            
+}
+
+static inline string getBBLabel (const llvm::BasicBlock &BB)
+{
+    string label = "";
+    for (const llvm::Instruction &I : BB) 
+    {
+        std::string instStr;
+        llvm::raw_string_ostream instStream(instStr);
+        I.print(instStream);
+        label += instStream.str() + "\\l";
+     }
+
+     return label;
+}
+
+void printCFG (llvm::Module& M, const std::string &Filename = "cfg.dot") 
+{
+    std::error_code EC;
+    llvm::raw_fd_ostream File(Filename, EC, llvm::sys::fs::OF_Text);
+    if (EC) 
+    {
+        llvm::errs() << "Error opening file " << Filename 
+                     << " for writing: " << EC.message() << "\n";
+        return;
+    }
+
+    File << "digraph CFG {\n";
+    for (const llvm::Function &F : M) 
+    {
+        if (F.isDeclaration())
+            continue;
+
+        File << "subgraph cluster_" << F.getName().str() << " {\n";
+        File << "label = \"" << F.getName().str() << "\";\n";
+
+        for (const llvm::BasicBlock &BB : F) 
+        {
+            std::string bbName = getBBName (BB);
+            std::string label  = getBBLabel (BB);
+
+            label += bbName + "\\l";
+            File << "\"" << bbName << "\" [shape=rectangle, label=\"" << label << "\"];\n";
+        }
+        
+        for (const llvm::BasicBlock &BB : F) 
+        {
+            std::string bbName = getBBName (BB);
+            for (const llvm::BasicBlock *Succ : llvm::successors(&BB)) 
+            {
+                std::string succName = getBBName (*Succ);
+                File << "\"" << bbName << "\" -> \"" << succName << "\";\n";
+            }
+        }
+
+        File << "}\n";
+    }
+
+    File << "}\n";
+}
+
 
 void analyzeModule(llvm::Module& module, string type) 
 {
@@ -193,5 +267,10 @@ void analyzeModule(llvm::Module& module, string type)
     {
         printCallGraph (module);
         genCallGraph (module);
+    }
+
+    if (type == "cfg")
+    {
+        printCFG (module);
     }
 }
