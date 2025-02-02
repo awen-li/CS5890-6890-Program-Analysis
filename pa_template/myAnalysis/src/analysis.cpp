@@ -6,6 +6,7 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/GraphWriter.h"
 #include "analysis.h"
+#include "pag.h"
 
 using namespace llvm;
 
@@ -214,7 +215,7 @@ static inline string getBBLabel (const llvm::BasicBlock &BB)
      return label;
 }
 
-void printCFG (LLVM& llvmParser, const std::string &Filename = "cfg.dot") 
+void printCFG (LLVM& llvmParser, const std::string &Filename = "cfg") 
 {
     std::error_code EC;
     llvm::raw_fd_ostream File(Filename, EC, llvm::sys::fs::OF_Text);
@@ -260,6 +261,17 @@ void printCFG (LLVM& llvmParser, const std::string &Filename = "cfg.dot")
     File << "}\n";
 }
 
+void printPAG (LLVM& llvmParser, const std::string &Filename = "pag") 
+{
+    PAG pag (&llvmParser);
+    pag.build();
+    
+    PAGVis vis(Filename, &pag);
+    vis.witeGraph();
+
+    return;
+}
+
 
 void analyzeModule(LLVM& llvmParser, string type) 
 {
@@ -281,5 +293,10 @@ void analyzeModule(LLVM& llvmParser, string type)
     if (type == "cfg")
     {
         printCFG (llvmParser);
+    }
+
+    if (type == "pag")
+    {
+        printPAG (llvmParser);
     }
 }
