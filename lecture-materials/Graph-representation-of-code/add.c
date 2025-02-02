@@ -4,9 +4,7 @@
 
 int main(int argc, char* argv[]) 
 {
-    int a = atoi (argv[1]);
-    int b = atoi (argv[2]);
-
-    return (a + b);
+    int a = argc;
+    return (a + 1);
 }
 

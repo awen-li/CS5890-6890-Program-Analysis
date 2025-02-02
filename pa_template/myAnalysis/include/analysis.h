@@ -9,7 +9,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "generic_graph.h"
 #include "graph_visual.h"
+#include "llvm_wrapper.h"
 
-void analyzeModule(llvm::Module& module, string type);
+void analyzeModule(LLVM& llvmParser, string type);
 
 #endif // ANALYSIS_H

@@ -12,27 +12,6 @@ static inline void addCmdOptions (CommandLineParser& cmdParser)
     cmdParser.addOption('t', "bool", "Perform the test for the code");
 }
 
-static inline void analyzeModule(const string& bcPath, const string& fType)
-{
-    // Initialize LLVM context
-    llvm::LLVMContext context;
-
-    // Read IR file
-    llvm::SMDiagnostic error;
-    std::unique_ptr<llvm::Module> module = llvm::parseIRFile(bcPath, error, context);
-    if (!module) 
-    {
-        error.print(bcPath.c_str(), llvm::errs());
-        return;
-    }
-
-    //llvm::outs() << "Loaded module:\n";
-    //module->print(llvm::outs(), nullptr);
-
-    analyzeModule(*module, fType);
-    return;
-}   
-
 int main(int argc, char** argv) 
 {
     CommandLineParser cmdParser(argc, argv);
@@ -53,7 +32,10 @@ int main(int argc, char** argv)
 
     if (cmdParser.hasOption("b"))
     {
-        analyzeModule (cmdParser.getOption ("b"), cmdParser.getOption ("f"));
+        string bcFile = cmdParser.getOption ("b");
+        LLVM llvmParser (bcFile);
+
+        analyzeModule (llvmParser, cmdParser.getOption ("f"));
     }
 
     return 0;

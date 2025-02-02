@@ -9,18 +9,19 @@
 
 using namespace llvm;
 
-static inline void printFunctions (llvm::Module& module)
+static inline void printFunctions (LLVM& llvmParser)
 {
     outs() <<"@@printFunctions \n";
 
-    for (const auto &function : module) 
+    for (auto it = llvmParser.func_begin (); it != llvmParser.func_end (); it++) 
     {
-        outs() << "Function: " << function.getName() << "\n";
+        Function *function = *it;
+        outs() << "Function: " << function->getName() << "\n";
 
-        const FunctionType *funcType = function.getFunctionType();
+        const FunctionType *funcType = function->getFunctionType();
         outs() << "\t>>Type: " << *funcType << "\n";
 
-        if (function.isDeclaration()) 
+        if (function->isDeclaration()) 
         {
             outs() << "\t>>Function is a declaration\n";
         } 
@@ -33,35 +34,39 @@ static inline void printFunctions (llvm::Module& module)
     }
 }
 
-static inline void printBasicBlockStats(const Module& module) 
+static inline void printBasicBlockStats(LLVM& llvmParser) 
 {
     outs() << "@@printBasicBlockStats\n";
 
-    for (const auto &function : module) 
+    for (auto it = llvmParser.func_begin (); it != llvmParser.func_end (); it++) 
     {
+        Function *function = *it;
+
         unsigned int basicBlockCount = 0;
-        for (const auto &bb : function) 
+        for (const auto &bb : *function) 
         {
             basicBlockCount++;
         }
 
-        outs() << "Function: " << function.getName() << "\n";
+        outs() << "Function: " << function->getName() << "\n";
         outs() << "\tNumber of Basic Blocks: " << basicBlockCount << "\n";
     }
 }
 
 
-static inline void printInstructions (const Module& module)
+static inline void printInstructions (LLVM& llvmParser)
 {
     errs() << "@@printInstructions\n";
 
-    for (const auto &function : module) 
+    for (auto it = llvmParser.func_begin (); it != llvmParser.func_end (); it++) 
     {
-        if (function.isDeclaration())
+        llvm::Function *function = *it;
+
+        if (function->isDeclaration())
             continue;
 
-        outs() << "Function: " << function.getName() << "\n";
-        for (const auto &bb : function) 
+        outs() << "Function: " << function->getName() << "\n";
+        for (const auto &bb : *function) 
         {
             for (const auto &instr : bb) 
             {
@@ -96,17 +101,19 @@ static inline void printCG (std::map<std::string, std::set<std::string>>& callGr
     }
 }
 
-static inline void printCallGraph(const Module& module) 
+static inline void printCallGraph(LLVM& llvmParser) 
 {
     errs() << "@@printCallGraph\n";
 
     std::map<std::string, std::set<std::string>> callGraph;
-    for (const auto &function : module) 
+    for (auto it = llvmParser.func_begin (); it != llvmParser.func_end (); it++) 
     {
-        std::string callerName = function.getName().str();
+        Function *function = *it;
+
+        std::string callerName = function->getName().str();
         callGraph[callerName] = std::set<std::string>();
 
-        for (const auto &bb : function) 
+        for (const auto &bb : *function) 
         {
             for (const auto &instr : bb) 
             {
@@ -169,9 +176,10 @@ void DumpCallGraph(CallGraph &CG, const std::string &FileName)
     }
 }
 
-bool genCallGraph (Module &M) 
+bool genCallGraph (LLVM& llvmParser) 
 {
-    CallGraph CG(M);
+    llvm::Module* m = llvmParser.getModule();
+    CallGraph CG(*m);
 
     DumpCallGraph (CG, "callgraph.dot");
     return false;
@@ -206,7 +214,7 @@ static inline string getBBLabel (const llvm::BasicBlock &BB)
      return label;
 }
 
-void printCFG (llvm::Module& M, const std::string &Filename = "cfg.dot") 
+void printCFG (LLVM& llvmParser, const std::string &Filename = "cfg.dot") 
 {
     std::error_code EC;
     llvm::raw_fd_ostream File(Filename, EC, llvm::sys::fs::OF_Text);
@@ -218,15 +226,16 @@ void printCFG (llvm::Module& M, const std::string &Filename = "cfg.dot")
     }
 
     File << "digraph CFG {\n";
-    for (const llvm::Function &F : M) 
+    for (auto it = llvmParser.func_begin (); it != llvmParser.func_end (); it++) 
     {
-        if (F.isDeclaration())
+        Function *F = *it;
+        if (F->isDeclaration())
             continue;
 
-        File << "subgraph cluster_" << F.getName().str() << " {\n";
-        File << "label = \"" << F.getName().str() << "\";\n";
+        File << "subgraph cluster_" << F->getName().str() << " {\n";
+        File << "label = \"" << F->getName().str() << "\";\n";
 
-        for (const llvm::BasicBlock &BB : F) 
+        for (const llvm::BasicBlock &BB : *F) 
         {
             std::string bbName = getBBName (BB);
             std::string label  = getBBLabel (BB);
@@ -235,7 +244,7 @@ void printCFG (llvm::Module& M, const std::string &Filename = "cfg.dot")
             File << "\"" << bbName << "\" [shape=rectangle, label=\"" << label << "\"];\n";
         }
         
-        for (const llvm::BasicBlock &BB : F) 
+        for (const llvm::BasicBlock &BB : *F) 
         {
             std::string bbName = getBBName (BB);
             for (const llvm::BasicBlock *Succ : llvm::successors(&BB)) 
@@ -252,25 +261,25 @@ void printCFG (llvm::Module& M, const std::string &Filename = "cfg.dot")
 }
 
 
-void analyzeModule(llvm::Module& module, string type) 
+void analyzeModule(LLVM& llvmParser, string type) 
 {
     if (type == "function")
-        printFunctions (module);
+        printFunctions (llvmParser);
 
     if (type == "block")
-        printBasicBlockStats (module);
+        printBasicBlockStats (llvmParser);
 
     if (type == "inst")
-        printInstructions (module);
+        printInstructions (llvmParser);
 
     if (type == "cg")
     {
-        printCallGraph (module);
-        genCallGraph (module);
+        printCallGraph (llvmParser);
+        genCallGraph (llvmParser);
     }
 
     if (type == "cfg")
     {
-        printCFG (module);
+        printCFG (llvmParser);
     }
 }
