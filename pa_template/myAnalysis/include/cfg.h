@@ -1,6 +1,6 @@
 
-#ifndef _MYGRAPH_H_
-#define _MYGRAPH_H_
+#ifndef _CFG_H_
+#define _CFG_H_
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -11,64 +11,63 @@
 #include "graph_generator.h"
 
 using namespace std;
-
-class myNode;
-class myEdge : public GenericEdge<myNode> 
+class CFGNode;  // Forward declaration
+class CFGEdge : public GenericEdge<CFGNode> 
 {
 public:
-    myEdge(myNode* s, myNode* d):GenericEdge<myNode>(s, d) {}
-
-    ~myEdge() {}
+    CFGEdge(CFGNode* s, CFGNode* d)
+        : GenericEdge<CFGNode>(s, d) {}
+    
+    ~CFGEdge() {}
 };
 
-
-class myNode : public GenericNode<myEdge> 
+class CFGNode : public GenericNode<CFGEdge> 
 {  
 public:
-    myNode(unsigned Id): GenericNode<myEdge>(Id) {}
+    CFGNode(unsigned Id)
+        : GenericNode<CFGEdge>(Id) {}
 };
 
-
-class myGraph : public GenericGraph<myNode, myEdge> 
+class CFG : public GenericGraph<CFGNode, CFGEdge> 
 {
 public:
-    myGraph() {} 
-    ~myGraph() {}
+    CFG() {} 
+    ~CFG() {}
 };
 
-
-class myGraphVisual: public GraphVis <myNode, myEdge, myGraph>
+class CFGVisual : public GraphVis<CFGNode, CFGEdge, CFG>
 {
 public:
-    myGraphVisual (string graphName, myGraph *graph)
-        :GraphVis <myNode, myEdge, myGraph>(graphName, graph) {}
-
-    ~myGraphVisual () {}
+    CFGVisual(std::string graphName, CFG* graph)
+        : GraphVis<CFGNode, CFGEdge, CFG>(graphName, graph) {}
+    
+    ~CFGVisual() {}
 };
 
-class myGraphTest: public GraphTest <myNode, myEdge, myGraph>
+class CFGTest : public GraphTest<CFGNode, CFGEdge, CFG>
 {
 public:
-    myGraphTest (): GraphTest <myNode, myEdge, myGraph>() {}
-    ~myGraphTest () {}
+    CFGTest()
+        : GraphTest<CFGNode, CFGEdge, CFG>() {}
+    
+    ~CFGTest() {}
 
-    void runTests ()
+    void runTests()
     {
-        // add your own test here
-        testGraphDump ();
-
-        GraphTest::runTests ();
+        // Add your own tests here
+        testGraphDump();
+        GraphTest::runTests();
     }
 
 private:
-    void testGraphDump ()
+    void testGraphDump()
     {
-        GraphGenerator<myNode, myEdge, myGraph> generator;
-        myGraph randomGraph = generator.generateRandomGraph(10);
+        GraphGenerator<CFGNode, CFGEdge, CFG> generator;
+        CFG randomCFG = generator.generateRandomGraph(10);
 
-        myGraphVisual myGV ("mygraph", &randomGraph);
-        myGV.witeGraph ();
+        CFGVisual cfgVisual("cfg", &randomCFG);
+        cfgVisual.witeGraph();
     }
-    
 };
+
 #endif 

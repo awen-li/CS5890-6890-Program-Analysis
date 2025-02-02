@@ -234,6 +234,8 @@ public:
         delete edge;
         return;
     }
+
+    virtual void build() {}
 };
 
 #endif 

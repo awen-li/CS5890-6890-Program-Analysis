@@ -1,6 +1,6 @@
 
-#ifndef _MYGRAPH_H_
-#define _MYGRAPH_H_
+#ifndef _DFG_H_
+#define _DFG_H_
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -12,63 +12,72 @@
 
 using namespace std;
 
-class myNode;
-class myEdge : public GenericEdge<myNode> 
+class DFGNode;  // Forward declaration
+class DFGEdge : public GenericEdge<DFGNode> 
 {
 public:
-    myEdge(myNode* s, myNode* d):GenericEdge<myNode>(s, d) {}
+    DFGEdge(DFGNode* s, DFGNode* d)
+        : GenericEdge<DFGNode>(s, d) {}
 
-    ~myEdge() {}
+    ~DFGEdge() {}
 };
 
-
-class myNode : public GenericNode<myEdge> 
+class DFGNode : public GenericNode<DFGEdge> 
 {  
 public:
-    myNode(unsigned Id): GenericNode<myEdge>(Id) {}
+    DFGNode(unsigned Id)
+        : GenericNode<DFGEdge>(Id) {}
 };
 
-
-class myGraph : public GenericGraph<myNode, myEdge> 
+class DFG : public GenericGraph<DFGNode, DFGEdge> 
 {
 public:
-    myGraph() {} 
-    ~myGraph() {}
-};
+    DFG() {}
+    PAG (LLVM *llvmpas): llvmParser (llvmpas) {} 
 
+    ~DFG() {}
 
-class myGraphVisual: public GraphVis <myNode, myEdge, myGraph>
-{
-public:
-    myGraphVisual (string graphName, myGraph *graph)
-        :GraphVis <myNode, myEdge, myGraph>(graphName, graph) {}
-
-    ~myGraphVisual () {}
-};
-
-class myGraphTest: public GraphTest <myNode, myEdge, myGraph>
-{
-public:
-    myGraphTest (): GraphTest <myNode, myEdge, myGraph>() {}
-    ~myGraphTest () {}
-
-    void runTests ()
+    void build()
     {
-        // add your own test here
-        testGraphDump ();
-
-        GraphTest::runTests ();
     }
 
 private:
-    void testGraphDump ()
-    {
-        GraphGenerator<myNode, myEdge, myGraph> generator;
-        myGraph randomGraph = generator.generateRandomGraph(10);
-
-        myGraphVisual myGV ("mygraph", &randomGraph);
-        myGV.witeGraph ();
-    }
-    
+    map<const llvm::Instruction*, DFGNode*> valueToNode;
+    LLVM *llvmParser;
 };
+
+class DFGVisual: public GraphVis<DFGNode, DFGEdge, DFG>
+{
+public:
+    DFGVisual(std::string graphName, DFG *graph)
+        : GraphVis<DFGNode, DFGEdge, DFG>(graphName, graph) {}
+
+    ~DFGVisual() {}
+};
+
+class DFGTest: public GraphTest<DFGNode, DFGEdge, DFG>
+{
+public:
+    DFGTest() : GraphTest<DFGNode, DFGEdge, DFG>() {}
+    ~DFGTest() {}
+
+    void runTests()
+    {
+        // Add your own tests here
+        testGraphDump();
+
+        GraphTest::runTests();
+    }
+
+private:
+    void testGraphDump()
+    {
+        GraphGenerator<DFGNode, DFGEdge, DFG> generator;
+        DFG randomGraph = generator.generateRandomGraph(10);
+
+        DFGVisual dfgVisual("dfg", &randomGraph);
+        dfgVisual.witeGraph();
+    }
+};
+
 #endif 

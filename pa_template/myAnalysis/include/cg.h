@@ -1,6 +1,6 @@
 
-#ifndef _MYGRAPH_H_
-#define _MYGRAPH_H_
+#ifndef _CG_H_
+#define _CG_H_
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -12,63 +12,64 @@
 
 using namespace std;
 
-class myNode;
-class myEdge : public GenericEdge<myNode> 
+class CGNode;  // Forward declaration
+class CGEdge : public GenericEdge<CGNode> 
 {
 public:
-    myEdge(myNode* s, myNode* d):GenericEdge<myNode>(s, d) {}
-
-    ~myEdge() {}
+    CGEdge(CGNode* s, CGNode* d)
+        : GenericEdge<CGNode>(s, d) {}
+    
+    ~CGEdge() {}
 };
 
-
-class myNode : public GenericNode<myEdge> 
+class CGNode : public GenericNode<CGEdge> 
 {  
 public:
-    myNode(unsigned Id): GenericNode<myEdge>(Id) {}
+    CGNode(unsigned Id)
+        : GenericNode<CGEdge>(Id) {}
 };
 
-
-class myGraph : public GenericGraph<myNode, myEdge> 
+class CG : public GenericGraph<CGNode, CGEdge> 
 {
 public:
-    myGraph() {} 
-    ~myGraph() {}
+    CG() {} 
+    ~CG() {}
 };
 
-
-class myGraphVisual: public GraphVis <myNode, myEdge, myGraph>
+class CGVisual : public GraphVis<CGNode, CGEdge, CG>
 {
 public:
-    myGraphVisual (string graphName, myGraph *graph)
-        :GraphVis <myNode, myEdge, myGraph>(graphName, graph) {}
-
-    ~myGraphVisual () {}
+    CGVisual(std::string graphName, CG* graph)
+        : GraphVis<CGNode, CGEdge, CG>(graphName, graph) {}
+    
+    ~CGVisual() {}
 };
 
-class myGraphTest: public GraphTest <myNode, myEdge, myGraph>
+class CGTest : public GraphTest<CGNode, CGEdge, CG>
 {
 public:
-    myGraphTest (): GraphTest <myNode, myEdge, myGraph>() {}
-    ~myGraphTest () {}
+    CGTest() 
+        : GraphTest<CGNode, CGEdge, CG>() {}
+    
+    ~CGTest() {}
 
-    void runTests ()
+    void runTests()
     {
-        // add your own test here
-        testGraphDump ();
-
-        GraphTest::runTests ();
+        // Add your own tests here
+        testGraphDump();
+        GraphTest::runTests();
     }
 
 private:
-    void testGraphDump ()
+    void testGraphDump()
     {
-        GraphGenerator<myNode, myEdge, myGraph> generator;
-        myGraph randomGraph = generator.generateRandomGraph(10);
+        GraphGenerator<CGNode, CGEdge, CG> generator;
+        CG randomGraph = generator.generateRandomGraph(10);
 
-        myGraphVisual myGV ("mygraph", &randomGraph);
-        myGV.witeGraph ();
+        CGVisual cgVisual("cg", &randomGraph);
+        cgVisual.witeGraph();
     }
-    
 };
+
+
 #endif 
