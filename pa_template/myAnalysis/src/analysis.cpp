@@ -215,7 +215,7 @@ static inline string getBBLabel (const llvm::BasicBlock &BB)
      return label;
 }
 
-void printCFG (LLVM& llvmParser, const std::string &Filename = "cfg") 
+void printCFG (LLVM& llvmParser, const std::string &Filename = "cfg.dot") 
 {
     std::error_code EC;
     llvm::raw_fd_ostream File(Filename, EC, llvm::sys::fs::OF_Text);
