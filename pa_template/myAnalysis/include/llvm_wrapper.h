@@ -63,6 +63,14 @@ public:
 
     llvm::Module* getModule() const { return ModulePtr.get(); }
 
+    inline string getValueLabel(const llvm::Value* V) 
+    {
+        string label;
+        llvm::raw_string_ostream rso(label);
+        V->print(rso);
+        return rso.str();
+    }
+
 private:
     void loadFunctions() 
     {

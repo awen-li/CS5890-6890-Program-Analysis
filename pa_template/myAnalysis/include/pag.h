@@ -187,10 +187,7 @@ private:
 
     inline string getValueLabel(const llvm::Value* V) 
     {
-        string label;
-        llvm::raw_string_ostream rso(label);
-        V->print(rso);
-        return rso.str();
+        return llvmParser->getValueLabel (V);
     }
 
 private:

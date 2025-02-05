@@ -7,6 +7,7 @@
 #include "llvm/Support/GraphWriter.h"
 #include "analysis.h"
 #include "pag.h"
+#include "cfg.h"
 
 using namespace llvm;
 

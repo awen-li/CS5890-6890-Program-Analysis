@@ -9,6 +9,7 @@
 #include "graph_visual.h"
 #include "graph_test.h"
 #include "graph_generator.h"
+#include "llvm_wrapper.h"
 
 using namespace std;
 class CFGNode;  // Forward declaration
@@ -31,8 +32,17 @@ public:
 class CFG : public GenericGraph<CFGNode, CFGEdge> 
 {
 public:
-    CFG() {} 
+    CFG() {llvmParser = NULL;}
+    CFG(LLVM *llvmpas): llvmParser (llvmpas) {} 
     ~CFG() {}
+
+    void build()
+    {
+    }
+
+private:
+    map<const llvm::Instruction*, CFGNode*> InstToNode;
+    LLVM *llvmParser;
 };
 
 class CFGVisual : public GraphVis<CFGNode, CFGEdge, CFG>
