@@ -13,3 +13,5 @@ cd build
 cmake -DCMAKE_BUILD_TYPE=$buildType ../myAnalysis
 make 
 
+# build benchmarks
+cd benchmark && ./build.sh && cd -
