@@ -25,5 +25,3 @@ int main()
     callFunction(&b);
     callFunction(&d);
 }
-
-
