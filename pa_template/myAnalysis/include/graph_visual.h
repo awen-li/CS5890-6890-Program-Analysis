@@ -33,6 +33,18 @@ protected:
         return;
     }
 
+    inline string escapeForDotLabel(const string &input) 
+    {
+        std::string output;
+        output.reserve(input.size());
+
+        for (char c : input) {
+            if (c == '\"') output.push_back('\\');
+            output.push_back(c);
+        }
+        return output;
+    }
+
     inline string getGraphLabel() 
     {
         if (m_GraphLabel != "")
@@ -138,13 +150,9 @@ public:
         return;
     }
 
-    void witeGraph () 
+    inline void writeAllNodes (GraphType *g)
     {
-        writeHeader(m_GraphName);
-
-        // write nodes
-        fprintf(m_File, "\t// Define the nodes\n");
-        for (auto it = m_Graph->begin (), end = m_Graph->end (); it != end; it++)
+        for (auto it = g->begin (), end = g->end (); it != end; it++)
         {
             NodeTy *node = it->second;
             if (!IsVizNode (node))
@@ -153,12 +161,11 @@ public:
             }
             writeNodes (node);
         }
+    }
 
-        fprintf(m_File, "\n\n");
-
-        // write edges
-        fprintf(m_File, "\t// Define the edges\n");
-        for (auto it = m_Graph->begin (), end = m_Graph->end (); it != end; it++)
+    inline void writeAllEdges (GraphType *g)
+    {
+        for (auto it = g->begin (), end = g->end (); it != end; it++)
         {
             NodeTy *node = it->second;
             if (!IsVizNode (node))
@@ -177,7 +184,20 @@ public:
                 writeEdge (edge);
             }
         }
+    }
 
+    virtual void witeGraph () 
+    {
+        writeHeader(m_GraphName);
+
+        // write nodes
+        fprintf(m_File, "\t// Define the nodes\n");
+        writeAllNodes (m_Graph);
+        fprintf(m_File, "\n\n");
+
+        // write edges
+        fprintf(m_File, "\t// Define the edges\n");
+        writeAllEdges (m_Graph);
         fprintf(m_File, "}\n");
     }   
 };

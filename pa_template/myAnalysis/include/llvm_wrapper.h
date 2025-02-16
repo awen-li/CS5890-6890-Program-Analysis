@@ -7,7 +7,7 @@
 #include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
-
+#include "llvm/IR/IntrinsicInst.h"
 
 using namespace std;
 

@@ -8,6 +8,7 @@
 #include "analysis.h"
 #include "pag.h"
 #include "cfg.h"
+#include "icfg.h"
 
 using namespace llvm;
 
@@ -135,134 +136,42 @@ static inline void printCallGraph(LLVM& llvmParser)
 }
 
 
-void DumpCallGraph(CallGraph &CG, const std::string &FileName)
+void buildCG (LLVM& llvmParser, const std::string &Filename = "cg") 
 {
-    std::error_code EC;
-    raw_fd_ostream File(FileName, EC, sys::fs::OF_Text);
+    CG cg (&llvmParser);
+    cg.build ();
 
-    if (!EC) 
+    CGVisual vis (Filename, &cg);
+    vis.witeGraph();
+
+    return;
+}
+
+void buildCFG (LLVM& llvmParser, const std::string &Filename = "cfg") 
+{
+    for (auto it = llvmParser.func_begin(); it != llvmParser.func_end(); ++it) 
     {
-        File << "digraph CallGraph {\n";
-        std::set<std::pair<std::string, std::string>> uniqueEdges;
-                
-        for (auto &node : CG) 
-        {
-            const Function *F = node.first;
-            if (!F || F->isDeclaration()) continue;
+        llvm::Function* F = *it;
+        if (F->isDeclaration()) continue;
 
-            std::string FuncName = F->getName().str();
-            File << "\"" << FuncName << "\";\n";
-
-            CallGraphNode *CGN = node.second.get();
-            for (unsigned i = 0; i < CGN->size(); ++i) 
-            {
-                CallGraphNode *CalleeNode = CGN->operator[](i);
-                Function *Callee = CalleeNode->getFunction();
-                if (Callee && !Callee->isDeclaration()) 
-                {
-                    std::string CalleeName = Callee->getName().str();
-                    if (uniqueEdges.insert({FuncName, CalleeName}).second) 
-                    {
-                        File << "\"" << FuncName << "\" -> \"" << CalleeName << "\";\n";
-                    }
-                }
-            }
-        }
-
-        File << "}\n";
-        errs() << "Call graph saved to " << FileName << "\n";
+        CFG cfg;
+        cfg.build(*F);
+            
+        CFGVisual vis (F->getName().str() + "_" + Filename, &cfg);
+        vis.witeGraph();
     } 
-    else 
-    {
-        errs() << "Error opening file: " << EC.message() << "\n";
-    }
 }
 
-bool genCallGraph (LLVM& llvmParser) 
+void buildICFG (LLVM& llvmParser, const std::string &Filename = "icfg") 
 {
-    llvm::Module* m = llvmParser.getModule();
-    CallGraph CG(*m);
+    ICFG icfg (&llvmParser);
+    icfg.build ();
 
-    DumpCallGraph (CG, "callgraph.dot");
-    return false;
+    ICFGVisual vis (Filename, &icfg);
+    vis.witeGraph();
 }
 
-static inline string getBBName (const llvm::BasicBlock &BB)
-{
-    std::string bbName;
-    if (BB.hasName())
-    {
-        bbName = BB.getName().str();
-    }
-    else
-    {
-        bbName = "BB_" + std::to_string(reinterpret_cast<uintptr_t>(&BB));
-    }
-
-    return bbName;            
-}
-
-static inline string getBBLabel (const llvm::BasicBlock &BB)
-{
-    string label = "";
-    for (const llvm::Instruction &I : BB) 
-    {
-        std::string instStr;
-        llvm::raw_string_ostream instStream(instStr);
-        I.print(instStream);
-        label += instStream.str() + "\\l";
-     }
-
-     return label;
-}
-
-void printCFG (LLVM& llvmParser, const std::string &Filename = "cfg.dot") 
-{
-    std::error_code EC;
-    llvm::raw_fd_ostream File(Filename, EC, llvm::sys::fs::OF_Text);
-    if (EC) 
-    {
-        llvm::errs() << "Error opening file " << Filename 
-                     << " for writing: " << EC.message() << "\n";
-        return;
-    }
-
-    File << "digraph CFG {\n";
-    for (auto it = llvmParser.func_begin (); it != llvmParser.func_end (); it++) 
-    {
-        Function *F = *it;
-        if (F->isDeclaration())
-            continue;
-
-        File << "subgraph cluster_" << F->getName().str() << " {\n";
-        File << "label = \"" << F->getName().str() << "\";\n";
-
-        for (const llvm::BasicBlock &BB : *F) 
-        {
-            std::string bbName = getBBName (BB);
-            std::string label  = getBBLabel (BB);
-
-            label += bbName + "\\l";
-            File << "\"" << bbName << "\" [shape=rectangle, label=\"" << label << "\"];\n";
-        }
-        
-        for (const llvm::BasicBlock &BB : *F) 
-        {
-            std::string bbName = getBBName (BB);
-            for (const llvm::BasicBlock *Succ : llvm::successors(&BB)) 
-            {
-                std::string succName = getBBName (*Succ);
-                File << "\"" << bbName << "\" -> \"" << succName << "\";\n";
-            }
-        }
-
-        File << "}\n";
-    }
-
-    File << "}\n";
-}
-
-void printPAG (LLVM& llvmParser, const std::string &Filename = "pag") 
+void buildPAG (LLVM& llvmParser, const std::string &Filename = "pag") 
 {
     PAG pag (&llvmParser);
     pag.build();
@@ -287,17 +196,21 @@ void analyzeModule(LLVM& llvmParser, string type)
 
     if (type == "cg")
     {
-        printCallGraph (llvmParser);
-        genCallGraph (llvmParser);
+        buildCG (llvmParser);
     }
 
     if (type == "cfg")
     {
-        printCFG (llvmParser);
+        buildCFG (llvmParser);
+    }
+
+    if (type == "icfg")
+    {
+        buildICFG (llvmParser);
     }
 
     if (type == "pag")
     {
-        printPAG (llvmParser);
+        buildPAG (llvmParser);
     }
 }

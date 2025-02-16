@@ -8,7 +8,7 @@ static inline void addCmdOptions (CommandLineParser& cmdParser)
 {
     // Add your new option here
     cmdParser.addOption('b', "", "Specify the path of LLVM bitcode file for analysis");
-    cmdParser.addOption('f', "", "Specify the functionality: function, block, inst");
+    cmdParser.addOption('f', "", "Specify the functionality: function, block, inst, cg, cfg, pag");
     cmdParser.addOption('t', "bool", "Perform the test for the code");
 }
 
