@@ -3,10 +3,10 @@ digraph "cg"{
 
 
 	// Define the nodes
-	N1 [shape=rectangle, color=black,label="C"];
-	N2 [shape=rectangle, color=black,label="B"];
-	N3 [shape=rectangle, color=black,label="printf"];
-	N4 [shape=rectangle, color=black,label="main"];
+	N1 [shape=rectangle, color=black,label="[1]C"];
+	N2 [shape=rectangle, color=black,label="[2]B"];
+	N3 [shape=rectangle, color=black,label="[3]printf"];
+	N4 [shape=rectangle, color=black,label="[4]main"];
 
 
 	// Define the edges

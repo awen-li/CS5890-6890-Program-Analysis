@@ -75,11 +75,9 @@ public:
         if (F.isDeclaration()) return;
 
         // Create artificial entry/exit nodes
-        entryNode = new CFGEntryNode (getNextNodeId(), &F);
-        assert (entryNode != NULL);
+        entryNode = new CFGEntryNode (getNextNodeId(), &F); 
         addNode(entryNode->getId(), entryNode);
-        exitNode  = new CFGExitNode (getNextNodeId());
-        assert (exitNode != NULL);
+        exitNode  = new CFGExitNode (getNextNodeId()); 
         addNode(exitNode->getId(), exitNode);
 
         queue<CFGNode*> worklist;
@@ -96,7 +94,33 @@ public:
 
         while (!worklist.empty()) 
         {
-            // add your code here
+            CFGNode *bbNode = worklist.front();
+            worklist.pop();
+            llvm::BasicBlock *llvmBB = bbNode->getBasicBlock ();
+            
+            if (llvm::succ_empty(llvmBB)) 
+            {
+                addCFGEdge(bbNode, exitNode);
+                continue;
+            }
+
+            for (llvm::BasicBlock *succBB : llvm::successors(llvmBB)) 
+            {
+                auto itr = visited.find(succBB);
+                if (itr == visited.end()) 
+                {
+                    vector<CFGNode*> succSubgraph = getSubgraph(succBB);
+                    addCFGEdge(bbNode, succSubgraph.front());
+
+                    worklist.push(succSubgraph.back());
+                    visited[succBB] = make_pair(succSubgraph.front(), succSubgraph.back());
+                }
+                else
+                {
+                    auto & [subFirst, subLast] = itr->second;
+                    addCFGEdge(bbNode, subFirst);
+                }    
+            }
         }
     }
 
@@ -191,7 +215,7 @@ public:
         {
             CFGEntryNode* enNode = (CFGEntryNode*)node;
             llvm::Function* func = enNode->getFunction ();
-            return func->getName ().str();
+            return LLVM().getValueLabel (func);
         }
         else if (node->isExit ())
         {
@@ -200,12 +224,8 @@ public:
         else
         {
             llvm::Instruction* inst = node->getInstruction ();
-
-            std::string instStr;
-            llvm::raw_string_ostream instStream(instStr);
-            inst->print(instStream);
-
-            return escapeForDotLabel (instStream.str());
+            std::string instStr = LLVM().getValueLabel (inst);
+            return escapeForDotLabel (instStr);
         }
     }
 

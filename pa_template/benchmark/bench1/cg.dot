@@ -3,18 +3,18 @@ digraph "cg"{
 
 
 	// Define the nodes
-	N1 [shape=rectangle, color=black,label="FuncA"];
-	N2 [shape=rectangle, color=black,label="printf"];
-	N3 [shape=rectangle, color=black,label="sprintf"];
-	N4 [shape=rectangle, color=black,label="fopen"];
-	N5 [shape=rectangle, color=black,label="random"];
-	N6 [shape=rectangle, color=black,label="fwrite"];
-	N7 [shape=rectangle, color=black,label="fclose"];
-	N8 [shape=rectangle, color=black,label="FuncB"];
-	N9 [shape=rectangle, color=black,label="exit"];
-	N10 [shape=rectangle, color=black,label="main"];
-	N11 [shape=rectangle, color=black,label="atoi"];
-	N12 [shape=rectangle, color=black,label="Getpasswd"];
+	N1 [shape=rectangle, color=black,label="[1]FuncA"];
+	N2 [shape=rectangle, color=black,label="[2]printf"];
+	N3 [shape=rectangle, color=black,label="[3]sprintf"];
+	N4 [shape=rectangle, color=black,label="[4]fopen"];
+	N5 [shape=rectangle, color=black,label="[5]random"];
+	N6 [shape=rectangle, color=black,label="[6]fwrite"];
+	N7 [shape=rectangle, color=black,label="[7]fclose"];
+	N8 [shape=rectangle, color=black,label="[8]FuncB"];
+	N9 [shape=rectangle, color=black,label="[9]exit"];
+	N10 [shape=rectangle, color=black,label="[10]main"];
+	N11 [shape=rectangle, color=black,label="[11]atoi"];
+	N12 [shape=rectangle, color=black,label="[12]Getpasswd"];
 
 
 	// Define the edges

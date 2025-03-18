@@ -3,15 +3,15 @@ digraph "main_cfg"{
 
 
 	// Define the nodes
-	N1 [shape=rectangle, color=black,label="main"];
-	N2 [shape=rectangle, color=black,label="exit"];
-	N3 [shape=rectangle, color=black,label="  %3 = alloca i32, align 4"];
-	N4 [shape=rectangle, color=black,label="  %4 = alloca i8**, align 8"];
-	N5 [shape=rectangle, color=black,label="  store i32 %0, i32* %3, align 4"];
-	N6 [shape=rectangle, color=black,label="  store i8** %1, i8*** %4, align 8"];
-	N7 [shape=rectangle, color=black,label="  %5 = load void (...)*, void (...)** @func, align 8, !dbg !26"];
-	N8 [shape=rectangle, color=black,label="  call void (...) %5(), !dbg !26"];
-	N9 [shape=rectangle, color=black,label="  ret i32 0, !dbg !27"];
+	N1 [shape=rectangle, color=black,label="[1]main"];
+	N2 [shape=rectangle, color=black,label="[2]exit"];
+	N3 [shape=rectangle, color=black,label="[3]  %3 = alloca i32"];
+	N4 [shape=rectangle, color=black,label="[4]  %4 = alloca i8**"];
+	N5 [shape=rectangle, color=black,label="[5]  store i32 %0, i32* %3"];
+	N6 [shape=rectangle, color=black,label="[6]  store i8** %1, i8*** %4"];
+	N7 [shape=rectangle, color=black,label="[7]  %5 = load void (...)*, void (...)** @func"];
+	N8 [shape=rectangle, color=black,label="[8]  call void (...) %5()"];
+	N9 [shape=rectangle, color=black,label="[9]  ret i32 0"];
 
 
 	// Define the edges

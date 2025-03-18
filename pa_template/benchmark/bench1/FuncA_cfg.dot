@@ -3,34 +3,34 @@ digraph "FuncA_cfg"{
 
 
 	// Define the nodes
-	N1 [shape=rectangle, color=black,label="FuncA"];
-	N2 [shape=rectangle, color=black,label="exit"];
-	N3 [shape=rectangle, color=black,label="  %3 = alloca i8*, align 8"];
-	N4 [shape=rectangle, color=black,label="  %4 = alloca i32, align 4"];
-	N5 [shape=rectangle, color=black,label="  %5 = alloca %struct._IO_FILE*, align 8"];
-	N6 [shape=rectangle, color=black,label="  %6 = alloca i32, align 4"];
-	N7 [shape=rectangle, color=black,label="  store i8* %0, i8** %3, align 8"];
-	N8 [shape=rectangle, color=black,label="  store i32 %1, i32* %4, align 4"];
-	N9 [shape=rectangle, color=black,label="  %7 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([17 x i8], [17 x i8]* @.str, i64 0, i64 0)), !dbg !23"];
-	N10 [shape=rectangle, color=black,label="  %8 = load i8*, i8** %3, align 8, !dbg !24"];
-	N11 [shape=rectangle, color=black,label="  %9 = load i32, i32* %4, align 4, !dbg !25"];
-	N12 [shape=rectangle, color=black,label="  %10 = call i32 (i8*, i8*, ...) @sprintf(i8* noundef %8, i8* noundef getelementptr inbounds ([8 x i8], [8 x i8]* @.str.1, i64 0, i64 0), i32 noundef %9) #6, !dbg !26"];
-	N13 [shape=rectangle, color=black,label="  %11 = load i8*, i8** %3, align 8, !dbg !89"];
-	N14 [shape=rectangle, color=black,label="  %12 = call noalias %struct._IO_FILE* @fopen(i8* noundef %11, i8* noundef getelementptr inbounds ([3 x i8], [3 x i8]* @.str.2, i64 0, i64 0)), !dbg !90"];
-	N15 [shape=rectangle, color=black,label="  store %struct._IO_FILE* %12, %struct._IO_FILE** %5, align 8, !dbg !88"];
-	N16 [shape=rectangle, color=black,label="  %13 = call i64 @random() #6, !dbg !93"];
-	N17 [shape=rectangle, color=black,label="  %14 = trunc i64 %13 to i32, !dbg !94"];
-	N18 [shape=rectangle, color=black,label="  %15 = urem i32 %14, 18, !dbg !95"];
-	N19 [shape=rectangle, color=black,label="  store i32 %15, i32* %6, align 4, !dbg !92"];
-	N20 [shape=rectangle, color=black,label="  %16 = load i32, i32* %6, align 4, !dbg !96"];
-	N21 [shape=rectangle, color=black,label="  %17 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([14 x i8], [14 x i8]* @.str.3, i64 0, i64 0), i32 noundef %16), !dbg !97"];
-	N22 [shape=rectangle, color=black,label="  %18 = bitcast i32* %6 to i8*, !dbg !98"];
-	N23 [shape=rectangle, color=black,label="  %19 = load %struct._IO_FILE*, %struct._IO_FILE** %5, align 8, !dbg !99"];
-	N24 [shape=rectangle, color=black,label="  %20 = call i64 @fwrite(i8* noundef %18, i64 noundef 1, i64 noundef 4, %struct._IO_FILE* noundef %19), !dbg !100"];
-	N25 [shape=rectangle, color=black,label="  %21 = load %struct._IO_FILE*, %struct._IO_FILE** %5, align 8, !dbg !101"];
-	N26 [shape=rectangle, color=black,label="  %22 = call i32 @fclose(%struct._IO_FILE* noundef %21), !dbg !102"];
-	N27 [shape=rectangle, color=black,label="  %23 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([15 x i8], [15 x i8]* @.str.4, i64 0, i64 0)), !dbg !103"];
-	N28 [shape=rectangle, color=black,label="  ret void, !dbg !104"];
+	N1 [shape=rectangle, color=black,label="[1]FuncA"];
+	N2 [shape=rectangle, color=black,label="[2]exit"];
+	N3 [shape=rectangle, color=black,label="[3]  %3 = alloca i8*"];
+	N4 [shape=rectangle, color=black,label="[4]  %4 = alloca i32"];
+	N5 [shape=rectangle, color=black,label="[5]  %5 = alloca %struct._IO_FILE*"];
+	N6 [shape=rectangle, color=black,label="[6]  %6 = alloca i32"];
+	N7 [shape=rectangle, color=black,label="[7]  store i8* %0, i8** %3"];
+	N8 [shape=rectangle, color=black,label="[8]  store i32 %1, i32* %4"];
+	N9 [shape=rectangle, color=black,label="[9]  %7 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([17 x i8], [17 x i8]* @.str, i64 0, i64 0))"];
+	N10 [shape=rectangle, color=black,label="[10]  %8 = load i8*, i8** %3"];
+	N11 [shape=rectangle, color=black,label="[11]  %9 = load i32, i32* %4"];
+	N12 [shape=rectangle, color=black,label="[12]  %10 = call i32 (i8*, i8*, ...) @sprintf(i8* noundef %8, i8* noundef getelementptr inbounds ([8 x i8], [8 x i8]* @.str.1, i64 0, i64 0), i32 noundef %9) #6"];
+	N13 [shape=rectangle, color=black,label="[13]  %11 = load i8*, i8** %3"];
+	N14 [shape=rectangle, color=black,label="[14]  %12 = call %struct._IO_FILE* @fopen(i8* noundef %11, i8* noundef getelementptr inbounds ([3 x i8], [3 x i8]* @.str.2, i64 0, i64 0))"];
+	N15 [shape=rectangle, color=black,label="[15]  store %struct._IO_FILE* %12, %struct._IO_FILE** %5"];
+	N16 [shape=rectangle, color=black,label="[16]  %13 = call i64 @random() #6"];
+	N17 [shape=rectangle, color=black,label="[17]  %14 = trunc i64 %13 to i32"];
+	N18 [shape=rectangle, color=black,label="[18]  %15 = urem i32 %14, 18"];
+	N19 [shape=rectangle, color=black,label="[19]  store i32 %15, i32* %6"];
+	N20 [shape=rectangle, color=black,label="[20]  %16 = load i32, i32* %6"];
+	N21 [shape=rectangle, color=black,label="[21]  %17 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([14 x i8], [14 x i8]* @.str.3, i64 0, i64 0), i32 noundef %16)"];
+	N22 [shape=rectangle, color=black,label="[22]  %18 = bitcast i32* %6 to i8*"];
+	N23 [shape=rectangle, color=black,label="[23]  %19 = load %struct._IO_FILE*, %struct._IO_FILE** %5"];
+	N24 [shape=rectangle, color=black,label="[24]  %20 = call i64 @fwrite(i8* noundef %18, i64 noundef 1, i64 noundef 4, %struct._IO_FILE* noundef %19)"];
+	N25 [shape=rectangle, color=black,label="[25]  %21 = load %struct._IO_FILE*, %struct._IO_FILE** %5"];
+	N26 [shape=rectangle, color=black,label="[26]  %22 = call i32 @fclose(%struct._IO_FILE* noundef %21)"];
+	N27 [shape=rectangle, color=black,label="[27]  %23 = call i32 (i8*, ...) @printf(i8* noundef getelementptr inbounds ([15 x i8], [15 x i8]* @.str.4, i64 0, i64 0))"];
+	N28 [shape=rectangle, color=black,label="[28]  ret void"];
 
 
 	// Define the edges

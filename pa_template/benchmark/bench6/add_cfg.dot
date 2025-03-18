@@ -3,17 +3,17 @@ digraph "add_cfg"{
 
 
 	// Define the nodes
-	N1 [shape=rectangle, color=black,label="add"];
-	N2 [shape=rectangle, color=black,label="exit"];
-	N3 [shape=rectangle, color=black,label="  %2 = alloca i32*, align 8"];
-	N4 [shape=rectangle, color=black,label="  %3 = alloca i32, align 4"];
-	N5 [shape=rectangle, color=black,label="  store i32* %0, i32** %2, align 8"];
-	N6 [shape=rectangle, color=black,label="  %4 = load i32*, i32** %2, align 8, !dbg !18"];
-	N7 [shape=rectangle, color=black,label="  %5 = load i32, i32* %4, align 4, !dbg !19"];
-	N8 [shape=rectangle, color=black,label="  store i32 %5, i32* %3, align 4, !dbg !17"];
-	N9 [shape=rectangle, color=black,label="  %6 = load i32, i32* %3, align 4, !dbg !20"];
-	N10 [shape=rectangle, color=black,label="  %7 = add nsw i32 %6, 1, !dbg !21"];
-	N11 [shape=rectangle, color=black,label="  ret i32 %7, !dbg !22"];
+	N1 [shape=rectangle, color=black,label="[1]add"];
+	N2 [shape=rectangle, color=black,label="[2]exit"];
+	N3 [shape=rectangle, color=black,label="[3]  %2 = alloca i32*"];
+	N4 [shape=rectangle, color=black,label="[4]  %3 = alloca i32"];
+	N5 [shape=rectangle, color=black,label="[5]  store i32* %0, i32** %2"];
+	N6 [shape=rectangle, color=black,label="[6]  %4 = load i32*, i32** %2"];
+	N7 [shape=rectangle, color=black,label="[7]  %5 = load i32, i32* %4"];
+	N8 [shape=rectangle, color=black,label="[8]  store i32 %5, i32* %3"];
+	N9 [shape=rectangle, color=black,label="[9]  %6 = load i32, i32* %3"];
+	N10 [shape=rectangle, color=black,label="[10]  %7 = add nsw i32 %6, 1"];
+	N11 [shape=rectangle, color=black,label="[11]  ret i32 %7"];
 
 
 	// Define the edges

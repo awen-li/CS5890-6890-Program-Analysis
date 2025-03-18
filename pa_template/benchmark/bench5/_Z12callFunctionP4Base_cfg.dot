@@ -3,17 +3,17 @@ digraph "_Z12callFunctionP4Base_cfg"{
 
 
 	// Define the nodes
-	N1 [shape=rectangle, color=black,label="_Z12callFunctionP4Base"];
-	N2 [shape=rectangle, color=black,label="exit"];
-	N3 [shape=rectangle, color=black,label="  %2 = alloca %class.Base*, align 8"];
-	N4 [shape=rectangle, color=black,label="  store %class.Base* %0, %class.Base** %2, align 8"];
-	N5 [shape=rectangle, color=black,label="  %3 = load %class.Base*, %class.Base** %2, align 8, !dbg !880"];
-	N6 [shape=rectangle, color=black,label="  %4 = bitcast %class.Base* %3 to void (%class.Base*)***, !dbg !881"];
-	N7 [shape=rectangle, color=black,label="  %5 = load void (%class.Base*)**, void (%class.Base*)*** %4, align 8, !dbg !881"];
-	N8 [shape=rectangle, color=black,label="  %6 = getelementptr inbounds void (%class.Base*)*, void (%class.Base*)** %5, i64 0, !dbg !881"];
-	N9 [shape=rectangle, color=black,label="  %7 = load void (%class.Base*)*, void (%class.Base*)** %6, align 8, !dbg !881"];
-	N10 [shape=rectangle, color=black,label="  call void %7(%class.Base* noundef nonnull align 8 dereferenceable(8) %3), !dbg !881"];
-	N11 [shape=rectangle, color=black,label="  ret void, !dbg !882"];
+	N1 [shape=rectangle, color=black,label="[1]_Z12callFunctionP4Base"];
+	N2 [shape=rectangle, color=black,label="[2]exit"];
+	N3 [shape=rectangle, color=black,label="[3]  %2 = alloca %class.Base*"];
+	N4 [shape=rectangle, color=black,label="[4]  store %class.Base* %0, %class.Base** %2"];
+	N5 [shape=rectangle, color=black,label="[5]  %3 = load %class.Base*, %class.Base** %2"];
+	N6 [shape=rectangle, color=black,label="[6]  %4 = bitcast %class.Base* %3 to void (%class.Base*)***"];
+	N7 [shape=rectangle, color=black,label="[7]  %5 = load void (%class.Base*)**, void (%class.Base*)*** %4"];
+	N8 [shape=rectangle, color=black,label="[8]  %6 = getelementptr inbounds void (%class.Base*)*, void (%class.Base*)** %5, i64 0"];
+	N9 [shape=rectangle, color=black,label="[9]  %7 = load void (%class.Base*)*, void (%class.Base*)** %6"];
+	N10 [shape=rectangle, color=black,label="[10]  call void %7(%class.Base* noundef nonnull align 8 dereferenceable(8) %3)"];
+	N11 [shape=rectangle, color=black,label="[11]  ret void"];
 
 
 	// Define the edges

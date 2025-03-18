@@ -91,7 +91,7 @@ protected:
         /* NodeID [color=grey,label="{NodeID: 0}"]; */
         string str;
         str = getNodeName (Node) + " [" + getNodeAttributes (Node) + 
-              ",label=\"" + getNodeLabel (Node) + "\"];";
+              ",label=\"" + "[" + to_string(Node->getId()) + "]" + getNodeLabel (Node) + "\"];";
 
         fprintf(m_File, "\t%s\n", str.c_str());
         return;        

@@ -30,10 +30,48 @@ public:
         return;
     }
 
+    void refine(llvm::Value *fpVal,
+                const std::unordered_set<llvm::Function*> &callees)
+    {
+        set<llvm::CallBase*> callSites = CG::getCallsites (fpVal);
+        if (callSites.empty()) 
+        {
+            return;
+        }
+
+        cg->refine (callSites, callees);
+
+        for (llvm::CallBase *callInst : callSites)
+        {
+            llvm::Function* caller = callInst->getParent ()->getParent();
+            CFG* callerCFG = getCFG(caller);
+            CFGNode* csNode = callerCFG->getCFGNode (callInst);
+            assert (csNode != NULL);
+
+            for (auto *callee : callees)
+            {
+                CFG* calleeCFG = getCFG(callee);
+                if (calleeCFG == NULL)
+                {
+                    continue;
+                }
+
+                CFGNode* calleeEntry = calleeCFG->getEntryNode();
+                CFGNode* calleeExit = calleeCFG->getExitNode();
+
+                addEdge(new CFGEdge(csNode, calleeEntry));
+                addEdge(new CFGEdge(calleeExit, csNode));
+            }
+        }
+    }
+
     cfg_iteratoir cfg_begin () { return func2CFG.begin (); }
     cfg_iteratoir cfg_end () { return func2CFG.end (); }
+    LLVM* getLLVMParser () { return llvmParser; }
+    CG* getCG () { return cg; }
+    
 private:
-    void buildCFGs() 
+    void buildCFGs()
     {
         if (!llvmParser) return;
 
@@ -140,7 +178,7 @@ public:
         {
             CFGEntryNode* enNode = (CFGEntryNode*)node;
             llvm::Function* func = enNode->getFunction ();
-            return func->getName ().str();
+            return LLVM().getValueLabel (func);
         }
         else if (node->isExit ())
         {
@@ -149,12 +187,8 @@ public:
         else
         {
             llvm::Instruction* inst = node->getInstruction ();
-
-            std::string instStr;
-            llvm::raw_string_ostream instStream(instStr);
-            inst->print(instStream);
-
-            return escapeForDotLabel (instStream.str());
+            std::string instStr = LLVM().getValueLabel (inst);;
+            return escapeForDotLabel (instStr);
         }
     }
 

@@ -10,8 +10,27 @@
 #include "graph_test.h"
 #include "graph_generator.h"
 #include "llvm_wrapper.h"
+#include "icfg.h"
 
 using namespace std;
+
+typedef enum  
+{
+    CST_NONE=0,
+    CST_ADDR_OF,
+    CST_COPY, 
+    CST_LOAD, 
+    CST_STORE,
+    CST_PTS
+} CstType;
+
+typedef enum  
+{
+    PNT_NONE=0,
+    PNT_GLOBAL,
+    PNT_FUNCTION, 
+    PNT_GENERAL
+} PagNodeType;
 
 // Forward declarations
 class PAGNode;
@@ -20,8 +39,13 @@ class PAGNode;
 class PAGEdge : public GenericEdge<PAGNode> 
 {
 public:
-    PAGEdge (PAGNode* s, PAGNode* d)
-      : GenericEdge<PAGNode>(s, d) { }
+    CstType cstType;
+
+    PAGEdge (PAGNode* s, PAGNode* d, CstType ct=CST_NONE)
+      : GenericEdge<PAGNode>(s, d) 
+    {
+        cstType = ct;
+    }  
 };
 
 
@@ -31,11 +55,24 @@ class PAGNode : public GenericNode<PAGEdge>
 {
 public:
     string nodeLabel;
+    llvm::Value *value;
+    PagNodeType nodeType;
+
     PAGNode (unsigned id)
-      : GenericNode<PAGEdge> (id) { }
+      : GenericNode<PAGEdge> (id)
+    { 
+        nodeLabel = "";
+        value     = NULL;
+        nodeType  = PNT_NONE;
+    }
     
-    PAGNode(unsigned id, const string &label)
-      : GenericNode<PAGEdge>(id), nodeLabel(label) { }
+    PAGNode(unsigned id, llvm::Value *val, const string &label, PagNodeType ntype)
+      : GenericNode<PAGEdge>(id)
+    {
+        nodeLabel = label;
+        value     = val;
+        nodeType  = ntype;
+    }
 };
 
 
@@ -43,8 +80,12 @@ public:
 class PAG : public GenericGraph<PAGNode, PAGEdge> 
 {
 public:
-    PAG () {llvmParser = NULL;} 
-    PAG (LLVM *llvmpas): llvmParser (llvmpas) {} 
+    PAG (ICFG *icfg) 
+    {
+        assert (icfg != NULL);
+        wicfg = icfg;
+        llvmParser = wicfg->getLLVMParser ();
+    } 
     ~PAG () {}
 
 public:
@@ -53,84 +94,60 @@ public:
         // Pre-populate globals.
         addGlobalNode ();
 
-        // Now add edges for each instruction's operands.
-        for (auto fIt = llvmParser->func_begin(); fIt != llvmParser->func_end(); ++fIt)
+        for (auto itr = wicfg->cfg_begin (); itr != wicfg->cfg_end (); itr++)
         {
-            llvm::Function *F = *fIt;
-            if (F->isDeclaration())
-                continue;
-            
             // Pre-populate function arguments.
+            llvm::Function *F = itr->first;
             addFuncArgNode (F);
 
-            set<llvm::BasicBlock*> visited;
-            queue<llvm::BasicBlock*> worklist;
-
-            llvm::BasicBlock *entry = &F->getEntryBlock();
-            worklist.push(entry);
-            visited.insert(entry);
-
-            while (!worklist.empty())
+            CFG *cfg = itr->second;
+            for (auto itn = cfg->begin (); itn != cfg->end (); itn++)
             {
-                llvm::BasicBlock *BB = worklist.front();
-                worklist.pop();
-
-                // Process each instruction in the basic block.
-                for (llvm::Instruction &I : *BB)
+                CFGNode *node = itn->second;
+                llvm::Instruction *inst = node->getInstruction();
+                if (inst == NULL)
                 {
-                    if (!llvm::dyn_cast<llvm::StoreInst>(&I))
-                    {
-                        PAGNode* def = addValueNode (&I);
-                        if (def == NULL)
-                        {
-                            continue;
-                        }
-                        llvm::errs ()<<I<<" is defined!\n";
-
-                        for (unsigned op = 0, numOps = I.getNumOperands(); op < numOps; ++op)
-                        {
-                            llvm::Value* operand = I.getOperand(op);
-                            if (llvm::isa<llvm::Constant>(operand))
-                                continue;
-
-                            PAGNode* use = getValueNode (operand);
-                            if (use == NULL)
-                            {
-                                continue;
-                            }
-
-                            PAGEdge* edge = new PAGEdge(use, def);
-                            addEdge(edge);
-                            llvm::errs ()<<"@Add edge from " <<*operand<<" to "<<I<<"\n";
-                        }
-                    }
-                    else
-                    {
-                        llvm::errs ()<<I<<"\n";
-
-                        llvm::Value* op0 = I.getOperand(0);
-                        if (llvm::isa<llvm::Constant>(op0))
-                            continue;
-                        llvm::Value* op1 = I.getOperand(1);
-
-                        PAGNode* def = getValueNode (op1);
-                        PAGNode* use = getValueNode (op0);
-
-                        PAGEdge* edge = new PAGEdge(use, def);
-                        addEdge(edge); 
-                        llvm::errs ()<<"@Add edge from " <<*op0<<" to "<<*op1<<"\n";
-                    }
+                    continue;
                 }
 
-                for (llvm::BasicBlock *Succ : llvm::successors(BB))
+                if (auto *callInst = llvm::dyn_cast<llvm::CallBase>(inst))
                 {
-                    if (visited.find(Succ) == visited.end()) {
-                        visited.insert(Succ);
-                        worklist.push(Succ);
-                    }
+                    handleInterEdge (callInst);
+                }
+                else
+                {
+                    handleIntraEdge (inst);
                 }
             }
         }
+    }
+
+    vector<PAGNode*> refine (llvm::Value *fpVal,
+                             const std::unordered_set<llvm::Function*> &callees)
+    {
+        vector<PAGNode*> imptNodes;
+        set<llvm::CallBase*> callSites = CG::getCallsites (fpVal);
+        for (llvm::CallBase *callInst : callSites)
+        {
+            for (auto *callee : callees)
+            {
+                handleInterEdge (callInst, callee);
+            }
+
+            for (auto argIt = callInst->arg_begin(); argIt != callInst->arg_end(); ++argIt)
+            {
+                llvm::Value *actualVal = *argIt;
+                PAGNode *actualNode = getValueNode(actualVal);
+                if (actualNode == NULL)
+                {
+                    continue;
+                }
+                imptNodes.push_back (actualNode);
+            }
+            
+        }
+
+        return imptNodes;
     }
 
 private:
@@ -139,22 +156,29 @@ private:
         return getNodeNum() + 1;
     }
 
-    inline PAGNode* addValueNode (llvm::Value* val)
+    inline PAGNode* addValueNode(llvm::Value* val, PagNodeType nodeType = PNT_GENERAL)
     {
-        unsigned nodeId = getNextNodeId();
-        string label = getValueLabel(val);
-        if (label.find (".dbg.") != string::npos)
+        PAGNode* existingNode = getValueNode(val);
+        if (existingNode != nullptr)
         {
-            return NULL;
+            return existingNode;
         }
 
-        PAGNode* valNode = new PAGNode(nodeId, label);
-        assert (valNode != NULL);
-        addNode(nodeId, valNode);
+        unsigned nodeId = getNextNodeId();
+        std::string label = getValueLabel(val);
+        if (label.find(".dbg.") != std::string::npos)
+        {
+            return nullptr;
+        }
+
+        PAGNode* valNode = new PAGNode(nodeId, val, label, nodeType);
+        assert(valNode != nullptr);
         valueToNode[val] = valNode;
 
+        addNode(nodeId, valNode);
         return valNode;
     }
+
 
     inline PAGNode* getValueNode (llvm::Value* val)
     {
@@ -169,11 +193,107 @@ private:
 
     inline void addGlobalNode ()
     {
+        // Add global pointer nodes (global variables)
         for (auto it = llvmParser->gv_begin (); it != llvmParser->gv_end (); it++)
         {
             llvm::GlobalVariable *gv = *it;
+            PAGNode *gvNode = addValueNode (gv, PNT_GLOBAL);
+            if (!gvNode)
+            {
+                continue;
+            }
 
-            addValueNode (gv);
+            llvm::Type *elemTy = gv->getType()->getPointerElementType();
+            if (elemTy->isPointerTy() && gv->hasInitializer())
+            {
+                // add an ADDR_OF edge to reflect "gv = &someone".
+                llvm::Constant *init = gv->getInitializer();
+                handleGlobalInitializer(gvNode, init);
+            }
+            
+            // always consider global var as a memory object
+            PAGEdge *addrEdge = new PAGEdge(gvNode, gvNode, CST_ADDR_OF);
+            addEdge(addrEdge);
+        }
+
+        /// Add function nodes as global pointers
+        for (auto it = llvmParser->func_begin(); it != llvmParser->func_end(); ++it)
+        {
+            llvm::Function *func = *it;
+            PAGNode *fnode = addValueNode (func, PNT_FUNCTION);
+            if (fnode == NULL)
+            {
+                continue;
+            }
+                    
+            // let function point to itself
+            PAGEdge *addrEdge = new PAGEdge(fnode, fnode, CST_ADDR_OF);
+            addEdge(addrEdge);  
+        }
+    }
+
+    inline void handleGlobalInitializer(PAGNode *gvNode, llvm::Constant *init)
+    {
+        // If init is a function
+        if (auto *func = llvm::dyn_cast<llvm::Function>(init))
+        {
+            PAGNode *funcNode = addValueNode(func, PNT_FUNCTION);
+            if (funcNode)
+            {
+                // "func -> gvNode" means "PTS(gvNode) includes func"
+                PAGEdge *addrEdge = new PAGEdge(funcNode, gvNode, CST_ADDR_OF);
+                addEdge(addrEdge);
+            }
+        }
+
+        // If init is another global
+        else if (auto *anotherGV = llvm::dyn_cast<llvm::GlobalVariable>(init))
+        {
+            PAGNode *objNode = addValueNode(anotherGV, PNT_GLOBAL);
+            if (objNode)
+            {
+                PAGEdge *addrEdge = new PAGEdge(objNode, gvNode, CST_ADDR_OF);
+                addEdge(addrEdge);
+            }
+        }
+        // If init is a ConstantExpr (bitcast, GEP, etc.)
+        else if (auto *ce = llvm::dyn_cast<llvm::ConstantExpr>(init))
+        {
+            handleConstantExpr(gvNode, ce);
+        }
+        else
+        {
+        }
+    }
+
+    inline void handleConstantExpr(PAGNode *gvNode, llvm::ConstantExpr *ce)
+    {
+        unsigned opcode = ce->getOpcode();
+        if (opcode == llvm::Instruction::BitCast ||
+            opcode == llvm::Instruction::IntToPtr ||
+            opcode == llvm::Instruction::PtrToInt)
+        {
+            // Usually the base is ce->getOperand(0)
+            llvm::Value *baseVal = ce->getOperand(0)->stripPointerCasts();
+            if (auto *baseNode = addValueNode(baseVal, PNT_GENERAL))
+            {
+                PAGEdge *addrEdge = new PAGEdge(baseNode, gvNode, CST_ADDR_OF);
+                addEdge(addrEdge);
+            }
+        }
+        else if (opcode == llvm::Instruction::GetElementPtr)
+        {
+            // For field-insensitive, unify with the GEP base
+            llvm::Value *gepBase = ce->getOperand(0)->stripPointerCasts();
+            if (auto *baseNode = addValueNode(gepBase, PNT_GENERAL))
+            {
+                PAGEdge *addrEdge = new PAGEdge(baseNode, gvNode, CST_ADDR_OF);
+                addEdge(addrEdge);
+            }
+        }
+        else
+        {
+
         }
     }
 
@@ -181,7 +301,10 @@ private:
     {
         for (llvm::Argument &arg : F->args()) 
         {
-             addValueNode (&arg);
+             if (arg.getType()->isPointerTy())
+            {
+                addValueNode(&arg);
+            }
         }
     }
 
@@ -190,9 +313,185 @@ private:
         return llvmParser->getValueLabel (V);
     }
 
+    inline void handleIntraEdge (llvm::Instruction* inst)
+    {
+        // 1) p = &a  (“address-of”)
+        if (llvmParser->isAddressOf(inst))
+        {
+            // e.g., getOperandsAddressOf() returns (pointerVal, memLocVal)
+            auto [pointerVal, memLocVal] = llvmParser->getOperandsAddressOf(inst);
+                    
+            PAGNode *ptrNode   = addValueNode(pointerVal);
+            PAGNode *memLocNode= addValueNode(memLocVal);
+                    
+            // Usually “ADDR_OF” means we conceptually link memLoc -> ptr
+            PAGEdge *addrEdge = new PAGEdge(memLocNode, ptrNode, CST_ADDR_OF);
+            addEdge(addrEdge);  
+        }
+                
+        // 2) q = p   (“assignment”)
+        else if (llvmParser->isAssignment(inst))
+        {
+            // dstVal = srcVal
+            // add your code here
+        }
+
+        // 3) *p = q  (“store”)
+        else if (llvmParser->isStore(inst))
+        {
+            // *ptrVal = srcVal
+            // add your code here
+        }
+
+        // 4) q = *p  (“load”)
+        else if (llvmParser->isLoad(inst))
+        {
+            // dstVal = *ptrNode
+            // add your code here
+        }
+        
+        // 5) other instructions
+        else
+        {
+            //llvm::errs()<<*inst<<"\n";
+        }
+
+        return;
+    }
+
+    inline void handleInterEdge (llvm::CallBase *callInst, llvm::Function *calleePtr=NULL)
+    {
+        llvm::Function *callee = callInst->getCalledFunction();
+        if (callee == NULL)
+        {
+            if (calleePtr != NULL)
+            {
+                callee = calleePtr;
+            }
+            else
+            {
+                return;
+            }
+            
+        }
+
+        // Check if this is an allocation function
+        if (llvmParser->isMemAlloc (callee))
+        {
+            handleAlloc(callInst);
+            return;
+        }
+
+        if (callee->isDeclaration())
+        {
+            // external function, need modeling function, here just skip
+            return;
+        }
+
+        // 1) copy: actual -> formal
+        handlCallEdge (callInst, callee);
+
+        // 2) copy: return -> call‐site result
+        handlReturnEdge (callInst, callee);
+
+        return;
+    }
+
+    inline void handleAlloc (llvm::CallBase *callInst)
+    {
+        // Create or retrieve a “fresh” heap object node
+        static unsigned heapCount = 0;
+        std::string heapLabel = "O_" + std::to_string(heapCount++);
+
+        unsigned heapNodeId = getNextNodeId();
+        PAGNode *heapObj = new PAGNode(heapNodeId, NULL, heapLabel, PNT_GENERAL);
+        addNode(heapNodeId, heapObj);
+
+        // The pointer receiving the allocation
+        llvm::Value *callResult = callInst;
+        PAGNode *ptrNode = addValueNode(callResult);
+
+        // Edge: heapObj -> ptr
+        PAGEdge *edge = new PAGEdge(heapObj, ptrNode, CST_ADDR_OF);
+        addEdge(edge);
+
+        return;
+    }
+
+    inline void handlCallEdge (llvm::CallBase *callInst, llvm::Function *callee)
+    {
+        unsigned numArgs = callInst->arg_size();
+        unsigned idx = 0;
+        for (auto argIt = callInst->arg_begin(); argIt != callInst->arg_end(); ++argIt, ++idx)
+        {
+            llvm::Value *actualVal = *argIt;
+            if (idx >= callee->arg_size())
+            {
+                break;
+            }    
+
+            llvm::Argument &formalArg = *(callee->arg_begin() + idx);
+            llvm::Value   *formalVal  = &formalArg;
+
+            PAGNode *actualNode = addValueNode(actualVal);
+            PAGNode *formalNode = addValueNode(formalVal);
+            
+            PAGEdge *argEdge = new PAGEdge(actualNode, formalNode, CST_COPY);
+            addEdge(argEdge);
+        }
+    }
+
+    inline void handlReturnEdge (llvm::CallBase *callInst, llvm::Function *callee)
+    {
+        if (callInst->use_empty()) 
+        {
+            return;
+        }
+
+        if (callee->getReturnType()->isVoidTy())
+        {
+            return;
+        }
+
+        if (!callee->getReturnType()->isPointerTy())
+        {
+            return;
+        }
+
+        PAGNode *callResultNode = addValueNode(callInst);
+        std::vector<PAGNode*> retNodes = getReturnNodes (callee);
+        for (auto *retNode : retNodes)
+        {
+            PAGEdge *retEdge = new PAGEdge(retNode, callResultNode, CST_COPY);
+            addEdge(retEdge);
+        }
+
+        return;
+    }
+
+    inline std::vector<PAGNode*> getReturnNodes (llvm::Function *F)
+    {
+        std::vector<PAGNode*> retNodes;
+        for (auto &BB : *F)
+        {
+            if (auto *retInst = llvm::dyn_cast<llvm::ReturnInst>(BB.getTerminator()))
+            {
+                llvm::Value *returnedVal = retInst->getReturnValue();
+                if (returnedVal && returnedVal->getType()->isPointerTy())
+                {
+                    PAGNode *retNode = addValueNode(returnedVal);
+                    retNodes.push_back(retNode);
+                }
+            }
+        }
+
+        return retNodes;
+    }
+
 private:
     map<const llvm::Value*, PAGNode*> valueToNode;
     LLVM *llvmParser;
+    ICFG *wicfg;
 };
 
 
@@ -211,50 +510,20 @@ public:
     {
         return node->nodeLabel;
     }
-};
 
-
-
-// PAGTest: Test cases for our PAG (constraint graph).
-// Inherits from the template GraphTest using our PAG types.
-class PAGTest: public GraphTest<PAGNode, PAGEdge, PAG>
-{
-public:
-    PAGTest () : GraphTest<PAGNode, PAGEdge, PAG> () {}
-    ~PAGTest () {}
-
-    void runTests ()
+    inline string getNodeAttributes(PAGNode *node) 
     {
-        // Add your own test here.
-        PAGtest1 ();
-
-        GraphTest<PAGNode, PAGEdge, PAG>::runTests();
+        vector<string> nodeColors = {"black", "grey", "purple", "black", "lightblue"};
+        string str = "shape=rectangle, color=" + nodeColors[node->nodeType];   
+        return str;
     }
 
-private:
-    void PAGtest1 ()
+    inline string getEdgeAttributes(PAGEdge *edge) 
     {
-        PAG pag;
-        
-        PAGNode* node1 = new PAGNode(1);
-        PAGNode* node2 = new PAGNode(2);
-        PAGNode* node3 = new PAGNode(3);
-        
-        pag.addNode(1, node1);
-        pag.addNode(2, node2);
-        pag.addNode(3, node3);
-        
-        PAGEdge* edge1 = new PAGEdge(node1, node2);
-        PAGEdge* edge2 = new PAGEdge(node2, node3);
-        PAGEdge* edge3 = new PAGEdge(node1, node3);
-        
-        pag.addEdge(edge1);
-        pag.addEdge(edge2);
-        pag.addEdge(edge3);
-        
-        PAGVis vis("PAGTestGraph", &pag);
-        vis.witeGraph();
-    }
+        vector<string> edgeColors = {"black", "green", "blue", "orange", "red", "grey"};
+        string str = "color=" + edgeColors[edge->cstType];  
+        return str;
+    } 
 };
 
 #endif

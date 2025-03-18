@@ -3,14 +3,14 @@ digraph "_ZN4Base3fooEv_cfg"{
 
 
 	// Define the nodes
-	N1 [shape=rectangle, color=black,label="_ZN4Base3fooEv"];
-	N2 [shape=rectangle, color=black,label="exit"];
-	N3 [shape=rectangle, color=black,label="  %2 = alloca %class.Base*, align 8"];
-	N4 [shape=rectangle, color=black,label="  store %class.Base* %0, %class.Base** %2, align 8"];
-	N5 [shape=rectangle, color=black,label="  %3 = load %class.Base*, %class.Base** %2, align 8"];
-	N6 [shape=rectangle, color=black,label="  %4 = call noundef nonnull align 8 dereferenceable(8) %\"class.std::basic_ostream\"* @_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(%\"class.std::basic_ostream\"* noundef nonnull align 8 dereferenceable(8) @_ZSt4cout, i8* noundef getelementptr inbounds ([12 x i8], [12 x i8]* @.str, i64 0, i64 0)), !dbg !878"];
-	N7 [shape=rectangle, color=black,label="  %5 = call noundef nonnull align 8 dereferenceable(8) %\"class.std::basic_ostream\"* @_ZNSolsEPFRSoS_E(%\"class.std::basic_ostream\"* noundef nonnull align 8 dereferenceable(8) %4, %\"class.std::basic_ostream\"* (%\"class.std::basic_ostream\"*)* noundef @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_), !dbg !879"];
-	N8 [shape=rectangle, color=black,label="  ret void, !dbg !880"];
+	N1 [shape=rectangle, color=black,label="[1]_ZN4Base3fooEv"];
+	N2 [shape=rectangle, color=black,label="[2]exit"];
+	N3 [shape=rectangle, color=black,label="[3]  %2 = alloca %class.Base*"];
+	N4 [shape=rectangle, color=black,label="[4]  store %class.Base* %0, %class.Base** %2"];
+	N5 [shape=rectangle, color=black,label="[5]  %3 = load %class.Base*, %class.Base** %2"];
+	N6 [shape=rectangle, color=black,label="[6]  %4 = call noundef nonnull align 8 dereferenceable(8) %\"class.std::basic_ostream\"* @_ZStlsISt11char_traitsIcEERSt13basic_ostreamIcT_ES5_PKc(%\"class.std::basic_ostream\"* noundef nonnull align 8 dereferenceable(8) @_ZSt4cout, i8* noundef getelementptr inbounds ([12 x i8], [12 x i8]* @.str, i64 0, i64 0))"];
+	N7 [shape=rectangle, color=black,label="[7]  %5 = call noundef nonnull align 8 dereferenceable(8) %\"class.std::basic_ostream\"* @_ZNSolsEPFRSoS_E(%\"class.std::basic_ostream\"* noundef nonnull align 8 dereferenceable(8) %4, %\"class.std::basic_ostream\"* (%\"class.std::basic_ostream\"*)* noundef @_ZSt4endlIcSt11char_traitsIcEERSt13basic_ostreamIT_T0_ES6_)"];
+	N8 [shape=rectangle, color=black,label="[8]  ret void"];
 
 
 	// Define the edges

@@ -3,30 +3,30 @@ digraph "icfg"{
 
 
 	// Define the nodes
-	N1 [shape=rectangle, color=black,label="add"];
-	N2 [shape=rectangle, color=black,label="exit"];
-	N3 [shape=rectangle, color=black,label="  %2 = alloca i32*, align 8"];
-	N4 [shape=rectangle, color=black,label="  %3 = alloca i32, align 4"];
-	N5 [shape=rectangle, color=black,label="  store i32* %0, i32** %2, align 8"];
-	N6 [shape=rectangle, color=black,label="  %4 = load i32*, i32** %2, align 8, !dbg !18"];
-	N7 [shape=rectangle, color=black,label="  %5 = load i32, i32* %4, align 4, !dbg !19"];
-	N8 [shape=rectangle, color=black,label="  store i32 %5, i32* %3, align 4, !dbg !17"];
-	N9 [shape=rectangle, color=black,label="  %6 = load i32, i32* %3, align 4, !dbg !20"];
-	N10 [shape=rectangle, color=black,label="  %7 = add nsw i32 %6, 1, !dbg !21"];
-	N11 [shape=rectangle, color=black,label="  ret i32 %7, !dbg !22"];
-	N12 [shape=rectangle, color=black,label="main"];
-	N13 [shape=rectangle, color=black,label="exit"];
-	N14 [shape=rectangle, color=black,label="  %3 = alloca i32, align 4"];
-	N15 [shape=rectangle, color=black,label="  %4 = alloca i32, align 4"];
-	N16 [shape=rectangle, color=black,label="  %5 = alloca i8**, align 8"];
-	N17 [shape=rectangle, color=black,label="  %6 = alloca i32, align 4"];
-	N18 [shape=rectangle, color=black,label="  store i32 0, i32* %3, align 4"];
-	N19 [shape=rectangle, color=black,label="  store i32 %0, i32* %4, align 4"];
-	N20 [shape=rectangle, color=black,label="  store i8** %1, i8*** %5, align 8"];
-	N21 [shape=rectangle, color=black,label="  %7 = load i32, i32* %4, align 4, !dbg !22"];
-	N22 [shape=rectangle, color=black,label="  store i32 %7, i32* %6, align 4, !dbg !21"];
-	N23 [shape=rectangle, color=black,label="  %8 = call i32 @add(i32* noundef %6), !dbg !23"];
-	N24 [shape=rectangle, color=black,label="  ret i32 %8, !dbg !24"];
+	N1 [shape=rectangle, color=black,label="[1]add"];
+	N2 [shape=rectangle, color=black,label="[2]exit"];
+	N3 [shape=rectangle, color=black,label="[3]  %2 = alloca i32*"];
+	N4 [shape=rectangle, color=black,label="[4]  %3 = alloca i32"];
+	N5 [shape=rectangle, color=black,label="[5]  store i32* %0, i32** %2"];
+	N6 [shape=rectangle, color=black,label="[6]  %4 = load i32*, i32** %2"];
+	N7 [shape=rectangle, color=black,label="[7]  %5 = load i32, i32* %4"];
+	N8 [shape=rectangle, color=black,label="[8]  store i32 %5, i32* %3"];
+	N9 [shape=rectangle, color=black,label="[9]  %6 = load i32, i32* %3"];
+	N10 [shape=rectangle, color=black,label="[10]  %7 = add nsw i32 %6, 1"];
+	N11 [shape=rectangle, color=black,label="[11]  ret i32 %7"];
+	N12 [shape=rectangle, color=black,label="[12]main"];
+	N13 [shape=rectangle, color=black,label="[13]exit"];
+	N14 [shape=rectangle, color=black,label="[14]  %3 = alloca i32"];
+	N15 [shape=rectangle, color=black,label="[15]  %4 = alloca i32"];
+	N16 [shape=rectangle, color=black,label="[16]  %5 = alloca i8**"];
+	N17 [shape=rectangle, color=black,label="[17]  %6 = alloca i32"];
+	N18 [shape=rectangle, color=black,label="[18]  store i32 0, i32* %3"];
+	N19 [shape=rectangle, color=black,label="[19]  store i32 %0, i32* %4"];
+	N20 [shape=rectangle, color=black,label="[20]  store i8** %1, i8*** %5"];
+	N21 [shape=rectangle, color=black,label="[21]  %7 = load i32, i32* %4"];
+	N22 [shape=rectangle, color=black,label="[22]  store i32 %7, i32* %6"];
+	N23 [shape=rectangle, color=black,label="[23]  %8 = call i32 @add(i32* noundef %6)"];
+	N24 [shape=rectangle, color=black,label="[24]  ret i32 %8"];
 
 
 	// Define the edges
