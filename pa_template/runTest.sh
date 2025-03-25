@@ -10,7 +10,7 @@ ANALYSIS_TOOL="./build/myAnalysis"
 # Root directory for benchmarks
 BENCH_ROOT="benchmark"
 
-# If user provided an arg (cfg|cg|icfg|all), use it; otherwise default to "all"
+# If user provided an arg (cfg|cg|icfg|pta|all), use it; otherwise default to "all"
 FUNCTION=${1:-"all"}
 
 ####################################################################
@@ -83,6 +83,10 @@ fi
 
 if [ "$FUNCTION" = "all" ] || [ "$FUNCTION" = "icfg" ]; then
     runAnalysis icfg
+fi
+
+if [ "$FUNCTION" = "all" ] || [ "$FUNCTION" = "pta" ]; then
+    runAnalysis pta
 fi
 
 echo "All benchmark analyses finished."
