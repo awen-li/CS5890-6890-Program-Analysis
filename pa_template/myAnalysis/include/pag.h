@@ -150,6 +150,17 @@ public:
         return imptNodes;
     }
 
+    inline PAGNode* getValueNode (llvm::Value* val)
+    {
+        auto it = valueToNode.find(val);
+        if (it != valueToNode.end())
+        {
+            return it->second;
+        }
+
+        return NULL;
+    }
+
 private:
     inline unsigned getNextNodeId () 
     {
@@ -177,18 +188,6 @@ private:
 
         addNode(nodeId, valNode);
         return valNode;
-    }
-
-
-    inline PAGNode* getValueNode (llvm::Value* val)
-    {
-        auto it = valueToNode.find(val);
-        if (it != valueToNode.end())
-        {
-            return it->second;
-        }
-
-        return NULL;
     }
 
     inline void addGlobalNode ()
@@ -333,21 +332,39 @@ private:
         else if (llvmParser->isAssignment(inst))
         {
             // dstVal = srcVal
-            // add your code here
+            auto [srcVal, dstVal] = llvmParser->getOperandsAssignment(inst);
+
+            PAGNode *srcNode = addValueNode(srcVal);
+            PAGNode *dstNode = addValueNode(dstVal);
+
+            PAGEdge *copyEdge = new PAGEdge(srcNode, dstNode, CST_COPY);
+            addEdge(copyEdge);
         }
 
         // 3) *p = q  (“store”)
         else if (llvmParser->isStore(inst))
         {
-            // *ptrVal = srcVal
-            // add your code here
+            // e.g., *ptrVal = srcVal
+            auto [ptrVal, srcVal] = llvmParser->getOperandsStore(inst);
+
+            PAGNode *ptrNode = addValueNode(ptrVal);
+            PAGNode *srcNode = addValueNode(srcVal);
+
+            PAGEdge *storeEdge = new PAGEdge(srcNode, ptrNode, CST_STORE);
+            addEdge(storeEdge);   
         }
 
         // 4) q = *p  (“load”)
         else if (llvmParser->isLoad(inst))
         {
-            // dstVal = *ptrNode
-            // add your code here
+            // e.g., dstVal = *ptrNode
+            auto [ptrVal, dstVal] = llvmParser->getOperandsLoad(inst);
+
+            PAGNode *ptrNode = addValueNode(ptrVal);
+            PAGNode *valNode = addValueNode(dstVal);
+
+            PAGEdge *loadEdge = new PAGEdge(ptrNode, valNode, CST_LOAD);
+            addEdge(loadEdge);
         }
         
         // 5) other instructions
