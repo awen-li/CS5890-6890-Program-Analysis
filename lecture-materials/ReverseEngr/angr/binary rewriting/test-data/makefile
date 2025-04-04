@@ -1,12 +1,12 @@
 
-CC = clang
-LD = clang
+CCC = $(CC)
+LD  = $(CC)
 
 SOURCE_PATH  = source
 INCLUDE_PATH = include
 OBJ_PATH     = obj
 
-CFLAGS       = -O0 -g -I$(INCLUDE_PATH)
+CFLAGS       = -g -O0 -I$(INCLUDE_PATH)
 LD_CFLAGS    = 
 
 SOURCE_FILES = $(wildcard $(SOURCE_PATH)/*.c)
@@ -23,7 +23,7 @@ $(TARGET): $(OBJ_FILES)
 	
 $(OBJ_PATH)/%.o: $(SOURCE_PATH)/%.c
 	@if [ ! -d $(OBJ_PATH) ];then mkdir $(OBJ_PATH); fi
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CCC) $(CFLAGS) -c -o $@ $<
 
 clean:
 	rm -rf $(OBJ_PATH) $(TARGET)
